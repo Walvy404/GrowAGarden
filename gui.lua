@@ -146,7 +146,7 @@ minimizeButton.MouseButton1Click:Connect(function()
 end)
 
 -- Logika sistem kunci
-local correctKey = "WalvyKey"
+local correctKey = "WALVYXYZ"
 
 submitKeyButton.MouseButton1Click:Connect(function()
 	if keyInput.Text == correctKey then
@@ -188,7 +188,7 @@ submitKeyButton.MouseButton1Click:Connect(function()
 
 		discordLink.MouseButton1Click:Connect(function()
 			if setclipboard then
-				setclipboard("https://discord.gg/your-invite-link") -- Ganti dengan tautan Discord Anda
+				setclipboard("https://discord.gg/WahJckA7") -- Ganti dengan tautan Discord Anda
 			end
 			discordNotification:Destroy()
 		end)
