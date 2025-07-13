@@ -1,503 +1,168 @@
--- Walvy Comunity Notification System
--- Lua script for creating modern UI notifications
-
-local WalvyNotification = {}
-
--- Configuration
-local Config = {
-    notification_duration = 5000, -- milliseconds
-    animation_speed = 300,
-    background_color = {0.29, 0.49, 0.35, 0.9}, -- Green background with transparency
-    text_color = {1, 1, 1, 1}, -- White text
-    border_color = {1, 1, 1, 0.3}, -- Semi-transparent white border
-    icon_color = {1, 1, 1, 0.8}, -- White icon
-    notification_width = 300,
-    notification_height = 80,
-    border_radius = 10,
-    icon_size = 24
-}
-
--- Notification state
-local notification_active = false
-local notification_timer = 0
-local notification_alpha = 0
-local notification_y_offset = -100
-
--- Create notification function
-function WalvyNotification.create(title, status, icon_type)
-    title = title or "Walvy Comunity"
-    status = status or "Key Valid"
-    icon_type = icon_type or "upload"
-    
-    local notification = {
-        title = title,
-        status = status,
-        icon_type = icon_type,
-        visible = true,
-        alpha = 0,
-        y_offset = -100,
-        timer = 0
-    }
-    
-    return notification
-end
-
--- Animation functions
-function WalvyNotification.animate_in(notification, dt)
-    notification.timer = notification.timer + dt
-    local progress = math.min(notification.timer / (Config.animation_speed / 1000), 1)
-    
-    -- Smooth easing function
-    local eased_progress = 1 - math.pow(1 - progress, 3)
-    
-    notification.alpha = eased_progress
-    notification.y_offset = -100 + (100 * eased_progress)
-    
-    return progress >= 1
-end
-
-function WalvyNotification.animate_out(notification, dt)
-    notification.timer = notification.timer + dt
-    local progress = math.min(notification.timer / (Config.animation_speed / 1000), 1)
-    
-    -- Smooth easing function
-    local eased_progress = math.pow(progress, 3)
-    
-    notification.alpha = 1 - eased_progress
-    notification.y_offset = eased_progress * -100
-    
-    return progress >= 1
-end
-
--- Draw notification function
-function WalvyNotification.draw(notification, screen_width, screen_height)
-    if not notification.visible then return end
-    
-    local x = (screen_width - Config.notification_width) / 2
-    local y = 50 + notification.y_offset
-    
-    -- Draw background with glassmorphism effect
-    love.graphics.setColor(Config.background_color[1], Config.background_color[2], 
-                          Config.background_color[3], Config.background_color[4] * notification.alpha)
-    love.graphics.rectangle("fill", x, y, Config.notification_width, Config.notification_height, 
-                           Config.border_radius, Config.border_radius)
-    
-    -- Draw border
-    love.graphics.setColor(Config.border_color[1], Config.border_color[2], 
-                          Config.border_color[3], Config.border_color[4] * notification.alpha)
-    love.graphics.setLineWidth(2)
-    love.graphics.rectangle("line", x, y, Config.notification_width, Config.notification_height, 
-                           Config.border_radius, Config.border_radius)
-    
-    -- Draw icon circle
-    local icon_x = x + 20
-    local icon_y = y + Config.notification_height / 2
-    love.graphics.setColor(Config.icon_color[1], Config.icon_color[2], 
-                          Config.icon_color[3], Config.icon_color[4] * notification.alpha)
-    love.graphics.circle("line", icon_x, icon_y, Config.icon_size)
-    
-    -- Draw upload arrow icon
-    love.graphics.setLineWidth(3)
-    love.graphics.line(icon_x, icon_y + 8, icon_x, icon_y - 8) -- Vertical line
-    love.graphics.line(icon_x - 6, icon_y - 4, icon_x, icon_y - 8) -- Left arrow
-    love.graphics.line(icon_x + 6, icon_y - 4, icon_x, icon_y - 8) -- Right arrow
-    
-    -- Draw text
-    love.graphics.setColor(Config.text_color[1], Config.text_color[2], 
-                          Config.text_color[3], Config.text_color[4] * notification.alpha)
-    
-    -- Title
-    love.graphics.setFont(love.graphics.newFont(16))
-    love.graphics.print(notification.title, x + 60, y + 15)
-    
-    -- Status
-    love.graphics.setFont(love.graphics.newFont(12))
-    love.graphics.setColor(0.8, 0.8, 0.8, 1 * notification.alpha)
-    love.graphics.print(notification.status, x + 60, y + 40)
-end
-
--- Update notification function
-function WalvyNotification.update(notification, dt)
-    if not notification.visible then return end
-    
-    if notification.alpha < 1 then
-        -- Animate in
-        if WalvyNotification.animate_in(notification, dt) then
-            notification.timer = 0
-        end
-    elseif notification.timer < Config.notification_duration / 1000 then
-        -- Display duration
-        notification.timer = notification.timer + dt
-    else
-        -- Animate out
-        if WalvyNotification.animate_out(notification, dt) then
-            notification.visible = false
-        end
-    end
-end
-
--- Show notification function
-function WalvyNotification.show(title, status, icon_type)
-    local notification = WalvyNotification.create(title, status, icon_type)
-    notification_active = true
-    notification_timer = 0
-    notification_alpha = 0
-    notification_y_offset = -100
-    
-    return notification
-end
-
--- Hide notification function
-function WalvyNotification.hide(notification)
-    notification.visible = false
-end
-
--- Example usage for LÖVE2D or similar frameworks
-function WalvyNotification.example_usage()
-    --[[ 
-    Example usage in main.lua:
-    
-    local WalvyNotification = require("walvy_notification")
-    local current_notification = nil
-    
-    function love.load()
-        current_notification = WalvyNotification.show("Walvy Comunity", "Key Valid", "upload")
-    end
-    
-    function love.update(dt)
-        if current_notification then
-            WalvyNotification.update(current_notification, dt)
-        end
-    end
-    
-    function love.draw()
-        if current_notification then
-            WalvyNotification.draw(current_notification, love.graphics.getWidth(), love.graphics.getHeight())
-        end
-    end
-    
-    function love.keypressed(key)
-        if key == "space" then
-            current_notification = WalvyNotification.show("Walvy Comunity", "Key Valid", "upload")
-        end
-    end
-    --]]
-end
-
--- Alternative version for other Lua UI frameworks
-function WalvyNotification.create_for_generic_framework()
-    return {
-        show_notification = function(ui_manager, title, status)
-            local notification_data = {
-                title = title or "Walvy Comunity",
-                status = status or "Key Valid",
-                background_color = "rgba(74, 124, 89, 0.9)",
-                text_color = "white",
-                border_color = "rgba(255, 255, 255, 0.3)",
-                width = 300,
-                height = 80,
-                duration = 5000,
-                position = "top-center",
-                animation = "slide-down",
-                icon = "upload-arrow"
-            }
-            
-            -- Framework-specific implementation would go here
-            -- ui_manager:create_notification(notification_data)
-            
-            return notification_data
-        end
-    }
-end
-
-return WalvyNotification
-
--- Example main.lua for Walvy Comunity Notification System
--- This example works with LÖVE2D (Love2D) framework
-
-local WalvyNotification = require("walvy_notification")
-
--- Global variables
-local current_notification = nil
-local background_pattern = {}
-local screen_width, screen_height
-
-function love.load()
-    -- Set up screen dimensions
-    screen_width = love.graphics.getWidth()
-    screen_height = love.graphics.getHeight()
-    
-    -- Create background pattern
-    for i = 1, 100 do
-        table.insert(background_pattern, {
-            x = math.random(0, screen_width),
-            y = math.random(0, screen_height),
-            size = math.random(2, 4),
-            alpha = math.random(0.1, 0.3)
-        })
-    end
-    
-    -- Show initial notification
-    current_notification = WalvyNotification.show("Walvy Comunity", "Key Valid", "upload")
-    
-    -- Set window title
-    love.window.setTitle("Walvy Comunity Notification Demo")
-end
-
-function love.update(dt)
-    -- Update notification
-    if current_notification then
-        WalvyNotification.update(current_notification, dt)
-    end
-end
-
-function love.draw()
-    -- Draw background gradient
-    love.graphics.setColor(0.29, 0.49, 0.35, 1) -- Green background
-    love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
-    
-    -- Draw background pattern
-    for _, dot in ipairs(background_pattern) do
-        love.graphics.setColor(1, 1, 1, dot.alpha)
-        love.graphics.circle("fill", dot.x, dot.y, dot.size)
-    end
-    
-    -- Draw notification
-    if current_notification and current_notification.visible then
-        WalvyNotification.draw(current_notification, screen_width, screen_height)
-    end
-    
-    -- Draw instructions
-    love.graphics.setColor(1, 1, 1, 0.8)
-    love.graphics.setFont(love.graphics.newFont(14))
-    love.graphics.print("Press SPACE to show notification", 20, screen_height - 80)
-    love.graphics.print("Press ENTER to show custom notification", 20, screen_height - 60)
-    love.graphics.print("Press ESC to hide notification", 20, screen_height - 40)
-    love.graphics.print("Press Q to quit", 20, screen_height - 20)
-end
-
-function love.keypressed(key)
-    if key == "space" then
-        -- Show default notification
-        current_notification = WalvyNotification.show("Walvy Comunity", "Key Valid", "upload")
-        
-    elseif key == "return" then
-        -- Show custom notification
-        local messages = {
-            {title = "Walvy Comunity", status = "Connected Successfully"},
-            {title = "Walvy Comunity", status = "Authentication Complete"},
-            {title = "Walvy Comunity", status = "System Ready"},
-            {title = "Walvy Comunity", status = "Update Available"}
-        }
-        local msg = messages[math.random(1, #messages)]
-        current_notification = WalvyNotification.show(msg.title, msg.status, "upload")
-        
-    elseif key == "escape" then
-        -- Hide current notification
-        if current_notification then
-            WalvyNotification.hide(current_notification)
-        end
-        
-    elseif key == "q" then
-        -- Quit application
-        love.event.quit()
-    end
-end
-
-function love.mousepressed(x, y, button)
-    if button == 1 then -- Left mouse button
-        -- Show notification on click
-        current_notification = WalvyNotification.show("Walvy Comunity", "Mouse Clicked!", "upload")
-    end
-end
-
-local WalvyNotification = require("walvy_notification")
-
--- Create and show notification
-local notification = WalvyNotification.show("Walvy Comunity", "Key Valid", "upload")
-
--- In your update loop
-function love.update(dt)
-    if notification then
-        WalvyNotification.update(notification, dt)
-    end
-end
-
--- In your draw loop
-function love.draw()
-    if notification and notification.visible then
-        WalvyNotification.draw(notification, love.graphics.getWidth(), love.graphics.getHeight())
-    end
-end
-
--- Show different status messages
-local notification1 = WalvyNotification.show("Walvy Comunity", "Connected Successfully")
-local notification2 = WalvyNotification.show("Walvy Comunity", "Authentication Complete")
-local notification3 = WalvyNotification.show("Walvy Comunity", "System Ready")
-
-local Config = {
-    notification_duration = 5000, -- milliseconds
-    animation_speed = 300,
-    background_color = {0.29, 0.49, 0.35, 0.9}, -- Green background
-    text_color = {1, 1, 1, 1}, -- White text
-    border_color = {1, 1, 1, 0.3}, -- Semi-transparent white border
-    icon_color = {1, 1, 1, 0.8}, -- White icon
-    notification_width = 300,
-    notification_height = 80,
-    border_radius = 10,
-    icon_size = 24
-}
-
-local generic_notification = WalvyNotification.create_for_generic_framework()
-local notification_data = generic_notification.show_notification(ui_manager, "Walvy Comunity", "Key Valid")
+--[[
+    Script: WalvyXploit GUI with Timed Key System
+    Description: A Roblox GUI script featuring a key system that allows access for 8 hours per key activation.
+                 Refactored for clarity and robustness.
+    Author: Walvy
+    Version: 1.3 (Cleanup and Refactor)
+]]
 
 --================================================================--
--- Services and Variables
+-- Services and Configuration
 --================================================================--
 
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
+
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 
--- Get a DataStore to save the key activation time
-local keyTimeStore = DataStoreService:GetDataStore("KeyActivationTimeStore")
+-- Configuration Constants
+local CONFIG = {
+    CORRECT_KEY = "WalvyKey",
+    DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
+    KEY_VALID_DURATION = 28800, -- 8 hours in seconds (8 * 60 * 60)
+    DATASTORE_NAME = "KeyActivationTimeStore"
+}
 
--- Configuration
-local CORRECT_KEY = "WalvyKey"
-local DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link"
-local KEY_VALID_DURATION = 28800 -- 8 hours in seconds (8 * 60 * 60)
-
--- State Variables
-local lastActiveMenu = nil
+-- DataStore for saving key activation times
+local keyTimeStore = DataStoreService:GetDataStore(CONFIG.DATASTORE_NAME)
 
 --================================================================--
--- GUI Creation
+-- GUI Component Constructors
 --================================================================--
 
 -- Main container for all GUI elements
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MyGui"
+screenGui.Name = "WalvyXploitGui"
 screenGui.Parent = playerGui
 
---- A utility function to create a UI Corner element.
+-- Forward declaration for the reopen button so other components can access it
+local reopenButton
+
+--- A utility function to create and parent a UICorner.
 local function createCorner(parent, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
     corner.Parent = parent
-    return corner
 end
 
---- Creates the Key System window.
-local function createKeySystemFrame()
+--- Creates the Key System window where the player enters their key.
+local function createKeySystem()
     local keyFrame = Instance.new("Frame")
     keyFrame.Name = "KeyFrame"
     keyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    keyFrame.Size = UDim2.new(0, 300, 0, 180) -- Increased height for status message
+    keyFrame.Size = UDim2.new(0, 300, 0, 180)
     keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     keyFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    keyFrame.BorderSizePixel = 0
     keyFrame.Parent = screenGui
     createCorner(keyFrame, 8)
 
-    local keyTitle = Instance.new("TextLabel")
-    keyTitle.Name = "KeyTitle"
-    keyTitle.Size = UDim2.new(1, 0, 0, 30)
-    keyTitle.Text = "Enter Key"
-    keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    keyTitle.Font = Enum.Font.SourceSansBold
-    keyTitle.TextSize = 18
-    keyTitle.BackgroundTransparency = 1
-    keyTitle.Parent = keyFrame
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Text = "Enter Key"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.SourceSansBold
+    title.TextSize = 18
+    title.BackgroundTransparency = 1
+    title.Parent = keyFrame
 
-    local keyInput = Instance.new("TextBox")
-    keyInput.Name = "KeyInput"
-    keyInput.Size = UDim2.new(0, 260, 0, 40)
-    keyInput.Position = UDim2.new(0.5, -130, 0, 40)
-    keyInput.PlaceholderText = "Your Key"
-    keyInput.Font = Enum.Font.SourceSans
-    keyInput.TextSize = 16
-    keyInput.Parent = keyFrame
+    local input = Instance.new("TextBox")
+    input.Name = "Input"
+    input.Size = UDim2.new(0, 260, 0, 40)
+    input.Position = UDim2.new(0.5, -130, 0, 40)
+    input.PlaceholderText = "Your Key"
+    input.Font = Enum.Font.SourceSans
+    input.TextSize = 16
+    input.Parent = keyFrame
 
-    local statusLabel = Instance.new("TextLabel")
-    statusLabel.Name = "StatusLabel"
-    statusLabel.Size = UDim2.new(1, -40, 0, 20)
-    statusLabel.Position = UDim2.new(0.5, 0, 0, 85)
-    statusLabel.AnchorPoint = Vector2.new(0.5, 0)
-    statusLabel.Text = ""
-    statusLabel.Font = Enum.Font.SourceSans
-    statusLabel.TextSize = 14
-    statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80) -- Red for errors
-    statusLabel.BackgroundTransparency = 1
-    statusLabel.Parent = keyFrame
+    local status = Instance.new("TextLabel")
+    status.Name = "Status"
+    status.Size = UDim2.new(1, -40, 0, 20)
+    status.Position = UDim2.new(0.5, 0, 0, 85)
+    status.AnchorPoint = Vector2.new(0.5, 0)
+    status.Text = ""
+    status.Font = Enum.Font.SourceSans
+    status.TextSize = 14
+    status.TextColor3 = Color3.fromRGB(255, 80, 80)
+    status.BackgroundTransparency = 1
+    status.Parent = keyFrame
 
-    local submitKeyButton = Instance.new("TextButton")
-    submitKeyButton.Name = "SubmitKeyButton"
-    submitKeyButton.Size = UDim2.new(0, 100, 0, 40)
-    submitKeyButton.Position = UDim2.new(0.5, -50, 0, 115)
-    submitKeyButton.Text = "Submit"
-    submitKeyButton.Font = Enum.Font.SourceSansBold
-    submitKeyButton.TextSize = 18
-    submitKeyButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
-    submitKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    submitKeyButton.Parent = keyFrame
-    createCorner(submitKeyButton, 8)
+    local submit = Instance.new("TextButton")
+    submit.Name = "Submit"
+    submit.Size = UDim2.new(0, 100, 0, 40)
+    submit.Position = UDim2.new(0.5, -50, 0, 115)
+    submit.Text = "Submit"
+    submit.Font = Enum.Font.SourceSansBold
+    submit.TextSize = 18
+    submit.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
+    submit.TextColor3 = Color3.fromRGB(255, 255, 255)
+    submit.Parent = keyFrame
+    createCorner(submit, 8)
 
-    return keyFrame, keyInput, submitKeyButton, statusLabel
+    return {
+        frame = keyFrame,
+        input = input,
+        submit = submit,
+        status = status
+    }
 end
 
 --- Creates the Menu Selection window.
-local function createMenuSelectionFrame()
+local function createMenuSelection()
     local selectionFrame = Instance.new("Frame")
     selectionFrame.Name = "SelectionFrame"
     selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     selectionFrame.Size = UDim2.new(0, 300, 0, 150)
     selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    selectionFrame.BorderSizePixel = 0
     selectionFrame.Visible = false
     selectionFrame.Parent = screenGui
     createCorner(selectionFrame, 8)
 
-    local selectionTitle = Instance.new("TextLabel")
-    selectionTitle.Name = "SelectionTitle"
-    selectionTitle.Size = UDim2.new(1, 0, 0, 30)
-    selectionTitle.Text = "Select Menu"
-    selectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    selectionTitle.Font = Enum.Font.SourceSansBold
-    selectionTitle.TextSize = 18
-    selectionTitle.BackgroundTransparency = 1
-    selectionTitle.Parent = selectionFrame
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Text = "Select Menu"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.SourceSansBold
+    title.TextSize = 18
+    title.BackgroundTransparency = 1
+    title.Parent = selectionFrame
 
-    local freeMenuButton = Instance.new("TextButton")
-    freeMenuButton.Name = "FreeMenuButton"
-    freeMenuButton.Size = UDim2.new(0, 120, 0, 50)
-    freeMenuButton.Position = UDim2.new(0.5, -130, 0.5, -25)
-    freeMenuButton.Text = "Free Menu"
-    freeMenuButton.Font = Enum.Font.SourceSansBold
-    freeMenuButton.TextSize = 18
-    freeMenuButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
-    freeMenuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    freeMenuButton.Parent = selectionFrame
-    createCorner(freeMenuButton, 8)
+    local freeButton = Instance.new("TextButton")
+    freeButton.Name = "FreeButton"
+    freeButton.Size = UDim2.new(0, 120, 0, 50)
+    freeButton.Position = UDim2.new(0.5, -130, 0.5, -25)
+    freeButton.Text = "Free Menu"
+    freeButton.Font = Enum.Font.SourceSansBold
+    freeButton.TextSize = 18
+    freeButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
+    freeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    freeButton.Parent = selectionFrame
+    createCorner(freeButton, 8)
 
-    local premiumMenuButton = Instance.new("TextButton")
-    premiumMenuButton.Name = "PremiumMenuButton"
-    premiumMenuButton.Size = UDim2.new(0, 120, 0, 50)
-    premiumMenuButton.Position = UDim2.new(0.5, 10, 0.5, -25)
-    premiumMenuButton.Text = "Premium Menu"
-    premiumMenuButton.Font = Enum.Font.SourceSansBold
-    premiumMenuButton.TextSize = 18
-    premiumMenuButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-    premiumMenuButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-    premiumMenuButton.Parent = selectionFrame
-    createCorner(premiumMenuButton, 8)
+    local premiumButton = Instance.new("TextButton")
+    premiumButton.Name = "PremiumButton"
+    premiumButton.Size = UDim2.new(0, 120, 0, 50)
+    premiumButton.Position = UDim2.new(0.5, 10, 0.5, -25)
+    premiumButton.Text = "Premium Menu"
+    premiumButton.Font = Enum.Font.SourceSansBold
+    premiumButton.TextSize = 18
+    premiumButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+    premiumButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    premiumButton.Parent = selectionFrame
+    createCorner(premiumButton, 8)
 
-    return selectionFrame, freeMenuButton, premiumMenuButton
+    return {
+        frame = selectionFrame,
+        freeButton = freeButton,
+        premiumButton = premiumButton
+    }
 end
 
 --- Creates the Discord Notification banner.
-local function createDiscordNotification()
+local function createDiscordBanner()
     local discordFrame = Instance.new("Frame")
     discordFrame.Name = "DiscordNotification"
     discordFrame.AnchorPoint = Vector2.new(0.5, 0)
@@ -508,59 +173,42 @@ local function createDiscordNotification()
     discordFrame.Parent = screenGui
     createCorner(discordFrame, 8)
 
-    local discordTitle = Instance.new("TextLabel")
-    discordTitle.Size = UDim2.new(1, 0, 0.5, 0)
-    discordTitle.Text = "Join our Discord!"
-    discordTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    discordTitle.Font = Enum.Font.SourceSansBold
-    discordTitle.TextSize = 18
-    discordTitle.BackgroundTransparency = 1
-    discordTitle.Parent = discordFrame
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0.5, 0)
+    title.Text = "Join our Discord!"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.SourceSansBold
+    title.TextSize = 18
+    title.BackgroundTransparency = 1
+    title.Parent = discordFrame
 
-    local discordLink = Instance.new("TextButton")
-    discordLink.Size = UDim2.new(0, 200, 0, 30)
-    discordLink.Position = UDim2.new(0.5, -100, 0.5, 0)
-    discordLink.Text = "Click to copy link"
-    discordLink.Font = Enum.Font.SourceSans
-    discordLink.TextSize = 16
-    discordLink.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-    discordLink.TextColor3 = Color3.fromRGB(255, 255, 255)
-    discordLink.Parent = discordFrame
-    createCorner(discordLink, 8)
+    local link = Instance.new("TextButton")
+    link.Size = UDim2.new(0, 200, 0, 30)
+    link.Position = UDim2.new(0.5, -100, 0.5, 0)
+    link.Text = "Click to copy link"
+    link.Font = Enum.Font.SourceSans
+    link.TextSize = 16
+    link.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    link.TextColor3 = Color3.fromRGB(255, 255, 255)
+    link.Parent = discordFrame
+    createCorner(link, 8)
 
-    return discordFrame, discordLink
-end
-
---- Creates the button to reopen a minimized menu.
-local function createReopenButton()
-    local reopenButton = Instance.new("TextButton")
-    reopenButton.Name = "ReopenButton"
-    reopenButton.AnchorPoint = Vector2.new(0.5, 0)
-    reopenButton.Size = UDim2.new(0, 150, 0, 50)
-    reopenButton.Position = UDim2.new(0.5, 0, 0, 5)
-    reopenButton.Text = "Open Menu"
-    reopenButton.Font = Enum.Font.SourceSansBold
-    reopenButton.TextSize = 16
-    reopenButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
-    reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    reopenButton.Visible = false
-    reopenButton.Parent = screenGui
-    createCorner(reopenButton, 8)
-    return reopenButton
+    return {
+        frame = discordFrame,
+        link = link
+    }
 end
 
 --- Creates the base structure for a draggable menu window.
-local function createBaseMenu(title)
+local function createMenuBase(title)
     local menuFrame = Instance.new("Frame")
     menuFrame.Name = title:gsub(" ", "") .. "Frame"
     menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     menuFrame.Size = UDim2.new(0, 600, 0, 500)
     menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    menuFrame.BorderSizePixel = 0
     menuFrame.Draggable = true
     menuFrame.Active = true
-    menuFrame.Visible = true
     menuFrame.Parent = screenGui
     createCorner(menuFrame, 8)
 
@@ -568,7 +216,6 @@ local function createBaseMenu(title)
     titleBar.Name = "TitleBar"
     titleBar.Size = UDim2.new(1, 0, 0, 30)
     titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
-    titleBar.BorderSizePixel = 0
     titleBar.Parent = menuFrame
     createCorner(titleBar, 8)
 
@@ -583,36 +230,36 @@ local function createBaseMenu(title)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = titleBar
 
-    local minimizeButton = Instance.new("TextButton")
-    minimizeButton.Name = "MinimizeButton"
-    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
-    minimizeButton.Position = UDim2.new(1, -60, 0, 0)
-    minimizeButton.Text = "—"
-    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
-    minimizeButton.Font = Enum.Font.SourceSansBold
-    minimizeButton.TextSize = 24
-    minimizeButton.Parent = titleBar
-    createCorner(minimizeButton, 8)
+    local minimize = Instance.new("TextButton")
+    minimize.Name = "MinimizeButton"
+    minimize.Size = UDim2.new(0, 30, 1, 0)
+    minimize.Position = UDim2.new(1, -60, 0, 0)
+    minimize.Text = "—"
+    minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimize.BackgroundColor3 = titleBar.BackgroundColor3
+    minimize.Font = Enum.Font.SourceSansBold
+    minimize.TextSize = 24
+    minimize.Parent = titleBar
+    createCorner(minimize, 8)
 
-    local closeButton = Instance.new("TextButton")
-    closeButton.Name = "CloseButton"
-    closeButton.Size = UDim2.new(0, 30, 1, 0)
-    closeButton.Position = UDim2.new(1, -30, 0, 0)
-    closeButton.Text = "✕"
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-    closeButton.Font = Enum.Font.SourceSansBold
-    closeButton.TextSize = 20
-    closeButton.Parent = titleBar
-    createCorner(closeButton, 8)
+    local close = Instance.new("TextButton")
+    close.Name = "CloseButton"
+    close.Size = UDim2.new(0, 30, 1, 0)
+    close.Position = UDim2.new(1, -30, 0, 0)
+    close.Text = "✕"
+    close.TextColor3 = Color3.fromRGB(255, 255, 255)
+    close.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    close.Font = Enum.Font.SourceSansBold
+    close.TextSize = 20
+    close.Parent = titleBar
+    createCorner(close, 8)
 
-    minimizeButton.MouseButton1Click:Connect(function()
+    minimize.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
-        reopenButton.Visible = true
+        if reopenButton then reopenButton.Visible = true end
     end)
 
-    closeButton.MouseButton1Click:Connect(function()
+    close.MouseButton1Click:Connect(function()
         screenGui:Destroy()
     end)
 
@@ -620,45 +267,74 @@ local function createBaseMenu(title)
 end
 
 --================================================================--
--- Key Validation and Main Logic
+-- Application Logic
 --================================================================--
 
-local keyFrame, keyInput, submitKeyButton, statusLabel = createKeySystemFrame()
-local selectionFrame, freeMenuButton, premiumMenuButton = createMenuSelectionFrame()
-local discordNotification, discordLink = createDiscordNotification()
-local reopenButton = createReopenButton()
+local App = {}
+App.lastActiveMenu = nil
 
-local function openMenu()
-    keyFrame:Destroy()
-    selectionFrame.Visible = true
-    discordNotification.Visible = true
-end
+function App:Init()
+    -- Create UI components
+    local keySystem = createKeySystem()
+    local menuSelection = createMenuSelection()
+    local discordBanner = createDiscordBanner()
 
-local function checkKeyValidity()
-    local success, activationTime = pcall(function()
-        return keyTimeStore:GetAsync(localPlayer.UserId .. "_" .. CORRECT_KEY)
+    reopenButton = Instance.new("TextButton")
+    reopenButton.Name = "ReopenButton"
+    reopenButton.AnchorPoint = Vector2.new(0.5, 0)
+    reopenButton.Size = UDim2.new(0, 150, 0, 50)
+    reopenButton.Position = UDim2.new(0.5, 0, 0, 5)
+    reopenButton.Text = "Open Menu"
+    reopenButton.Font = Enum.Font.SourceSansBold
+    reopenButton.TextSize = 16
+    reopenButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
+    reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    reopenButton.Visible = false
+    reopenButton.Parent = screenGui
+    createCorner(reopenButton, 8)
+
+    -- Define actions
+    local function showMainMenu()
+        keySystem.frame:Destroy()
+        menuSelection.frame.Visible = true
+        discordBanner.frame.Visible = true
+    end
+
+    -- Connect events
+    keySystem.submit.MouseButton1Click:Connect(function()
+        self:OnKeySubmit(keySystem.input.Text, keySystem.status, showMainMenu)
     end)
 
-    if success and activationTime then
-        local timeSinceActivation = tick() - activationTime
-        if timeSinceActivation < KEY_VALID_DURATION then
-            -- Key is still valid, open the menu directly
-            openMenu()
-            return
-        else
-            -- Key has expired, remove the old entry
-            pcall(function()
-                keyTimeStore:RemoveAsync(localPlayer.UserId .. "_" .. CORRECT_KEY)
-            end)
+    menuSelection.freeButton.MouseButton1Click:Connect(function()
+        menuSelection.frame:Destroy()
+        self.lastActiveMenu = createMenuBase("Free Menu")
+    end)
+
+    menuSelection.premiumButton.MouseButton1Click:Connect(function()
+        menuSelection.frame:Destroy()
+        self.lastActiveMenu = createMenuBase("Premium Menu")
+    end)
+
+    discordBanner.link.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(CONFIG.DISCORD_INVITE_LINK)
         end
-    end
-    -- If no valid key session, the key prompt remains visible
+        discordBanner.frame:Destroy()
+    end)
+
+    reopenButton.MouseButton1Click:Connect(function()
+        if self.lastActiveMenu then
+            self.lastActiveMenu.Visible = true
+        end
+        reopenButton.Visible = false
+    end)
+
+    -- Initial check
+    self:CheckForExistingKeySession(showMainMenu)
 end
 
--- --- Event Handlers ---
-
-submitKeyButton.MouseButton1Click:Connect(function()
-    if keyInput.Text ~= CORRECT_KEY then
+function App:OnKeySubmit(key, statusLabel, successCallback)
+    if key ~= CONFIG.CORRECT_KEY then
         statusLabel.Text = "Incorrect Key"
         return
     end
@@ -666,7 +342,7 @@ submitKeyButton.MouseButton1Click:Connect(function()
     statusLabel.Text = "Checking key..."
 
     local success, activationTime = pcall(function()
-        return keyTimeStore:GetAsync(localPlayer.UserId .. "_" .. CORRECT_KEY)
+        return keyTimeStore:GetAsync(localPlayer.UserId .. "_" .. CONFIG.CORRECT_KEY)
     end)
 
     if not success then
@@ -675,53 +351,43 @@ submitKeyButton.MouseButton1Click:Connect(function()
     end
 
     local currentTime = tick()
-    if activationTime and (currentTime - activationTime < KEY_VALID_DURATION) then
-        -- Key is already active and valid
+    if activationTime and (currentTime - activationTime < CONFIG.KEY_VALID_DURATION) then
         statusLabel.Text = "Key session active. Opening menu..."
-        wait(1)
-        openMenu()
+        task.wait(1)
+        successCallback()
     else
-        -- New key activation
         local setSuccess, err = pcall(function()
-            keyTimeStore:SetAsync(localPlayer.UserId .. "_" .. CORRECT_KEY, currentTime)
+            keyTimeStore:SetAsync(localPlayer.UserId .. "_" .. CONFIG.CORRECT_KEY, currentTime)
         end)
         if setSuccess then
             statusLabel.Text = "Key activated! Opening menu..."
-            wait(1)
-            openMenu()
+            task.wait(1)
+            successCallback()
         else
             statusLabel.Text = "Error: Could not save key. Try again."
         end
     end
-end)
+end
 
-freeMenuButton.MouseButton1Click:Connect(function()
-    selectionFrame:Destroy()
-    local freeMenu = createBaseMenu("Free Menu")
-    lastActiveMenu = freeMenu
-end)
+function App:CheckForExistingKeySession(successCallback)
+    local success, activationTime = pcall(function()
+        return keyTimeStore:GetAsync(localPlayer.UserId .. "_" .. CONFIG.CORRECT_KEY)
+    end)
 
-premiumMenuButton.MouseButton1Click:Connect(function()
-    selectionFrame:Destroy()
-    local premiumMenu = createBaseMenu("Premium Menu")
-    lastActiveMenu = premiumMenu
-end)
-
-reopenButton.MouseButton1Click:Connect(function()
-    if lastActiveMenu then
-        lastActiveMenu.Visible = true
+    if success and activationTime then
+        if (tick() - activationTime) < CONFIG.KEY_VALID_DURATION then
+            successCallback()
+        else
+            pcall(function()
+                keyTimeStore:RemoveAsync(localPlayer.UserId .. "_" .. CONFIG.CORRECT_KEY)
+            end)
+        end
     end
-    reopenButton.Visible = false
-end)
+end
 
-discordLink.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(DISCORD_INVITE_LINK)
-    end
-    discordNotification:Destroy()
-end)
+--================================================================--
+-- Script Entry Point
+--================================================================--
 
--- On script start, check if there's already a valid key session
-checkKeyValidity()
-
-print("WalvyXploit GUI with Timed Key Loaded.")
+App:Init()
+print("WalvyXploit GUI Loaded (v1.3).")
