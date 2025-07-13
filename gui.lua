@@ -146,17 +146,42 @@ resizeHandleCorner.Parent = resizeHandle
 -- Logika untuk minimize/maximize
 -- Fungsi untuk logika minimize/maximize
 local function setupMinimizeLogic(frame)
-	local minimizeButton = frame:FindFirstChild("TitleBar"):FindFirstChild("MinimizeButton")
-	local originalSize = frame.Size
+	local titleBar = frame:FindFirstChild("TitleBar")
+	local minimizeButton = titleBar:FindFirstChild("MinimizeButton")
+
+	local originalSize
+    local originalPosition
 	local minimized = false
+
+    -- Perbarui posisi saat frame selesai dipindahkan
+    frame:GetPropertyChangedSignal("Position"):Connect(function()
+        if not minimized then
+            originalPosition = frame.Position
+        end
+    end)
+
+    -- Perbarui ukuran saat frame selesai di-resize
+    frame:GetPropertyChangedSignal("Size"):Connect(function()
+        if not minimized then
+            originalSize = frame.Size
+        end
+    end)
 
 	minimizeButton.MouseButton1Click:Connect(function()
 		minimized = not minimized
 		if minimized then
-			frame.Size = UDim2.new(0, 300, 0, 30)
+            originalSize = frame.Size
+            originalPosition = frame.Position
+            local titleBarHeight = titleBar.AbsoluteSize.Y
+			frame.Size = UDim2.new(0, originalSize.X.Offset, 0, titleBarHeight)
+
+            local newY = originalPosition.Y.Offset - (originalSize.Y.Offset / 2) + (titleBarHeight / 2)
+            frame.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset, originalPosition.Y.Scale, newY)
+
 			minimizeButton.Text = "+"
 		else
 			frame.Size = originalSize
+            frame.Position = originalPosition
 			minimizeButton.Text = "-"
 		end
 	end)
