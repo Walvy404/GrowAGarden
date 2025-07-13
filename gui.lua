@@ -1,6 +1,6 @@
 -- Membuat ScreenGui untuk menampung semua elemen GUI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MyGui"
+screenGui.Name = "Walvy Comunity"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Frame untuk sistem kunci
@@ -129,6 +129,7 @@ communityLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 communityLabel.Font = Enum.Font.SourceSans
 communityLabel.TextSize = 16
 communityLabel.BackgroundTransparency = 1
+end)
 
 -- Logika untuk minimize/maximize
 local minimized = false
