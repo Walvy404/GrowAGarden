@@ -38,7 +38,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "TitleLabel"
 titleLabel.Parent = titleBar
 titleLabel.Size = UDim2.new(1, -30, 1, 0)
-titleLabel.Text = "Walvy Comunity"
+titleLabel.Text = "My GUI"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.Font = Enum.Font.SourceSansBold
 titleLabel.TextSize = 18
@@ -203,12 +203,108 @@ freeMenuFrame.Parent = screenGui
 freeMenuFrame.Visible = false
 freeMenuFrame.TitleLabel.Text = "Free Menu"
 
+-- Konten untuk Menu Gratis
+local freeFeatureButton = Instance.new("TextButton")
+freeFeatureButton.Name = "FreeFeatureButton"
+freeFeatureButton.Parent = freeMenuFrame
+freeFeatureButton.Size = UDim2.new(0, 120, 0, 40)
+freeFeatureButton.Position = UDim2.new(0.1, 0, 0.2, 0)
+freeFeatureButton.Text = "Free Feature 1"
+freeFeatureButton.Font = Enum.Font.SourceSans
+freeFeatureButton.TextSize = 16
+freeFeatureButton.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+freeFeatureButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+local freeFeatureButtonCorner = Instance.new("UICorner")
+freeFeatureButtonCorner.CornerRadius = UDim.new(0, 8)
+freeFeatureButtonCorner.Parent = freeFeatureButton
+
+local freeToggleButton = Instance.new("TextButton")
+freeToggleButton.Name = "FreeToggleButton"
+freeToggleButton.Parent = freeMenuFrame
+freeToggleButton.Size = UDim2.new(0, 120, 0, 40)
+freeToggleButton.Position = UDim2.new(0.1, 0, 0.4, 0)
+freeToggleButton.Text = "Toggle Off"
+freeToggleButton.Font = Enum.Font.SourceSans
+freeToggleButton.TextSize = 16
+freeToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0) -- Merah untuk status Off
+freeToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+local freeToggleButtonCorner = Instance.new("UICorner")
+freeToggleButtonCorner.CornerRadius = UDim.new(0, 8)
+freeToggleButtonCorner.Parent = freeToggleButton
+
+local isToggled = false
+freeToggleButton.MouseButton1Click:Connect(function()
+    isToggled = not isToggled
+    if isToggled then
+        freeToggleButton.Text = "Toggle On"
+        freeToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0) -- Hijau untuk status On
+    else
+        freeToggleButton.Text = "Toggle Off"
+        freeToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    end
+end)
+
 -- Frame untuk Menu Premium
 local premiumMenuFrame = mainFrame:Clone()
 premiumMenuFrame.Name = "PremiumMenuFrame"
 premiumMenuFrame.Parent = screenGui
 premiumMenuFrame.Visible = false
 premiumMenuFrame.TitleLabel.Text = "Premium Menu"
+
+-- Konten untuk Menu Premium
+local premiumFeatureButton1 = Instance.new("TextButton")
+premiumFeatureButton1.Name = "PremiumFeatureButton1"
+premiumFeatureButton1.Parent = premiumMenuFrame
+premiumFeatureButton1.Size = UDim2.new(0, 140, 0, 40)
+premiumFeatureButton1.Position = UDim2.new(0.1, 0, 0.2, 0)
+premiumFeatureButton1.Text = "Premium Feature 1"
+premiumFeatureButton1.Font = Enum.Font.SourceSans
+premiumFeatureButton1.TextSize = 16
+premiumFeatureButton1.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+premiumFeatureButton1.TextColor3 = Color3.fromRGB(0, 0, 0)
+local premiumFeatureButton1Corner = Instance.new("UICorner")
+premiumFeatureButton1Corner.CornerRadius = UDim.new(0, 8)
+premiumFeatureButton1Corner.Parent = premiumFeatureButton1
+
+local premiumFeatureButton2 = Instance.new("TextButton")
+premiumFeatureButton2.Name = "PremiumFeatureButton2"
+premiumFeatureButton2.Parent = premiumMenuFrame
+premiumFeatureButton2.Size = UDim2.new(0, 140, 0, 40)
+premiumFeatureButton2.Position = UDim2.new(0.1, 0, 0.4, 0)
+premiumFeatureButton2.Text = "Premium Feature 2"
+premiumFeatureButton2.Font = Enum.Font.SourceSans
+premiumFeatureButton2.TextSize = 16
+premiumFeatureButton2.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+premiumFeatureButton2.TextColor3 = Color3.fromRGB(0, 0, 0)
+local premiumFeatureButton2Corner = Instance.new("UICorner")
+premiumFeatureButton2Corner.CornerRadius = UDim.new(0, 8)
+premiumFeatureButton2Corner.Parent = premiumFeatureButton2
+
+local premiumToggleButton = Instance.new("TextButton")
+premiumToggleButton.Name = "PremiumToggleButton"
+premiumToggleButton.Parent = premiumMenuFrame
+premiumToggleButton.Size = UDim2.new(0, 140, 0, 40)
+premiumToggleButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+premiumToggleButton.Text = "Super Toggle Off"
+premiumToggleButton.Font = Enum.Font.SourceSans
+premiumToggleButton.TextSize = 16
+premiumToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+premiumToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+local premiumToggleButtonCorner = Instance.new("UICorner")
+premiumToggleButtonCorner.CornerRadius = UDim.new(0, 8)
+premiumToggleButtonCorner.Parent = premiumToggleButton
+
+local isPremiumToggled = false
+premiumToggleButton.MouseButton1Click:Connect(function()
+    isPremiumToggled = not isPremiumToggled
+    if isPremiumToggled then
+        premiumToggleButton.Text = "Super Toggle On"
+        premiumToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+    else
+        premiumToggleButton.Text = "Super Toggle Off"
+        premiumToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    end
+end)
 
 -- Terapkan logika minimize ke semua frame menu
 setupMinimizeLogic(mainFrame)
