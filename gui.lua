@@ -129,6 +129,19 @@ communityLabel.Font = Enum.Font.SourceSans
 communityLabel.TextSize = 16
 communityLabel.BackgroundTransparency = 1
 
+-- Pegangan untuk resize
+local resizeHandle = Instance.new("TextLabel")
+resizeHandle.Name = "ResizeHandle"
+resizeHandle.Parent = mainFrame
+resizeHandle.Size = UDim2.new(0, 15, 0, 15)
+resizeHandle.Position = UDim2.new(1, -15, 1, -15)
+resizeHandle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+resizeHandle.BorderSizePixel = 0
+resizeHandle.Text = ""
+local resizeHandleCorner = Instance.new("UICorner")
+resizeHandleCorner.CornerRadius = UDim.new(0, 4)
+resizeHandleCorner.Parent = resizeHandle
+
 -- Logika untuk minimize/maximize
 -- Fungsi untuk logika minimize/maximize
 local function setupMinimizeLogic(frame)
@@ -147,6 +160,48 @@ local function setupMinimizeLogic(frame)
 		end
 	end)
 end
+
+local function setupResizeLogic(frame)
+    local handle = frame:FindFirstChild("ResizeHandle")
+    local dragging = false
+    local startPos
+    local startSize
+
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            startPos = Vector2.new(input.Position.X, input.Position.Y)
+            startSize = frame.Size
+            -- Opsi: nonaktifkan draggable frame utama saat resizing
+            frame.Draggable = false
+        end
+    end)
+
+    handle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+            -- Aktifkan kembali draggable frame
+            frame.Draggable = true
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local newPos = Vector2.new(input.Position.X, input.Position.Y)
+            local delta = newPos - startPos
+
+            local newSizeX = startSize.X.Offset + delta.X
+            local newSizeY = startSize.Y.Offset + delta.Y
+
+            -- Batas ukuran minimum
+            if newSizeX < 200 then newSizeX = 200 end
+            if newSizeY < 150 then newSizeY = 150 end
+
+            frame.Size = UDim2.new(0, newSizeX, 0, newSizeY)
+        end
+    end)
+end
+
 
 -- Logika sistem kunci
 -- Frame Pemilihan Menu
@@ -244,6 +299,7 @@ premiumMenuButtonCorner.Parent = premiumMenuButton
 
 -- Terapkan logika minimize ke semua frame menu
 setupMinimizeLogic(mainFrame)
+setupResizeLogic(mainFrame)
 
 function createFreeMenu()
     local freeMenuFrame = mainFrame:Clone()
@@ -293,6 +349,7 @@ function createFreeMenu()
         end
     end)
     setupMinimizeLogic(freeMenuFrame)
+    setupResizeLogic(freeMenuFrame)
 end
 
 function createPremiumMenu()
@@ -357,6 +414,7 @@ function createPremiumMenu()
         end
     end)
     setupMinimizeLogic(premiumMenuFrame)
+    setupResizeLogic(premiumMenuFrame)
 end
 
 freeMenuButton.MouseButton1Click:Connect(function()
