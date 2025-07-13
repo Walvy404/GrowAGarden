@@ -1,12 +1,3 @@
---[[
-    Script: Walvy Community GUI
-    Description: A versatile GUI script with a key system, free/premium menus, and dynamic UI creation.
-    Features: Draggable, Minimizable, Closable, Color Themed.
-]]
-
---================================================================--
--- GUI ELEMENTS
---================================================================--
 
 -- Main ScreenGui
 local screenGui = Instance.new("ScreenGui")
