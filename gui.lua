@@ -7,8 +7,9 @@ screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 local keyFrame = Instance.new("Frame")
 keyFrame.Name = "KeyFrame"
 keyFrame.Parent = screenGui
+keyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 keyFrame.Size = UDim2.new(0, 300, 0, 150)
-keyFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 keyFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 keyFrame.BorderSizePixel = 0
 local keyFrameCorner = Instance.new("UICorner")
@@ -143,6 +144,12 @@ local resizeHandleCorner = Instance.new("UICorner")
 resizeHandleCorner.CornerRadius = UDim.new(0, 4)
 resizeHandleCorner.Parent = resizeHandle
 
+-- Pegangan untuk resize kiri
+local resizeHandleLeft = resizeHandle:Clone()
+resizeHandleLeft.Name = "ResizeHandleLeft"
+resizeHandleLeft.Parent = mainFrame
+resizeHandleLeft.Position = UDim2.new(0, 0, 1, -15)
+
 -- Logika untuk minimize/maximize
 -- Fungsi untuk logika minimize/maximize
 local function setupMinimizeLogic(frame)
@@ -187,8 +194,7 @@ local function setupMinimizeLogic(frame)
 	end)
 end
 
-local function setupResizeLogic(frame)
-    local handle = frame:FindFirstChild("ResizeHandle")
+local function setupResizeLogic(frame, handle, direction)
     local dragging = false
     local startPos
     local startSize
@@ -198,7 +204,6 @@ local function setupResizeLogic(frame)
             dragging = true
             startPos = Vector2.new(input.Position.X, input.Position.Y)
             startSize = frame.Size
-            -- Opsi: nonaktifkan draggable frame utama saat resizing
             frame.Draggable = false
         end
     end)
@@ -206,7 +211,6 @@ local function setupResizeLogic(frame)
     handle.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
-            -- Aktifkan kembali draggable frame
             frame.Draggable = true
         end
     end)
@@ -216,10 +220,14 @@ local function setupResizeLogic(frame)
             local newPos = Vector2.new(input.Position.X, input.Position.Y)
             local delta = newPos - startPos
 
-            local newSizeX = startSize.X.Offset + delta.X
+            local newSizeX
+            if direction == "right" then
+                newSizeX = startSize.X.Offset + delta.X
+            else -- left
+                newSizeX = startSize.X.Offset - delta.X
+            end
             local newSizeY = startSize.Y.Offset + delta.Y
 
-            -- Batas ukuran minimum
             if newSizeX < 200 then newSizeX = 200 end
             if newSizeY < 150 then newSizeY = 150 end
 
@@ -234,8 +242,9 @@ end
 local selectionFrame = Instance.new("Frame")
 selectionFrame.Name = "SelectionFrame"
 selectionFrame.Parent = screenGui
+selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 selectionFrame.Size = UDim2.new(0, 300, 0, 150)
-selectionFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 selectionFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 selectionFrame.BorderSizePixel = 0
 selectionFrame.Visible = false
@@ -247,8 +256,9 @@ selectionFrameCorner.Parent = selectionFrame
 local discordNotification = Instance.new("Frame")
 discordNotification.Name = "DiscordNotification"
 discordNotification.Parent = screenGui
-discordNotification.Size = UDim2.new(0, 300, 0, 100)
-discordNotification.Position = UDim2.new(0, 10, 1, -110) -- Pojok kiri bawah
+discordNotification.AnchorPoint = Vector2.new(0.5, 0)
+discordNotification.Size = UDim2.new(0, 300, 0, 60)
+discordNotification.Position = UDim2.new(0.5, 0, 0, 10) -- Tengah atas
 discordNotification.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 discordNotification.Visible = false
 local discordCorner = Instance.new("UICorner")
@@ -257,7 +267,7 @@ discordCorner.Parent = discordNotification
 
 local discordTitle = Instance.new("TextLabel")
 discordTitle.Parent = discordNotification
-discordTitle.Size = UDim2.new(1, 0, 0, 30)
+discordTitle.Size = UDim2.new(1, 0, 0.5, 0)
 discordTitle.Text = "Join our Discord!"
 discordTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 discordTitle.Font = Enum.Font.SourceSansBold
@@ -266,8 +276,8 @@ discordTitle.BackgroundTransparency = 1
 
 local discordLink = Instance.new("TextButton")
 discordLink.Parent = discordNotification
-discordLink.Size = UDim2.new(0, 200, 0, 40)
-discordLink.Position = UDim2.new(0.5, -100, 0, 40)
+discordLink.Size = UDim2.new(0, 200, 0, 30)
+discordLink.Position = UDim2.new(0.5, -100, 0.5, 0)
 discordLink.Text = "Click to copy link"
 discordLink.Font = Enum.Font.SourceSans
 discordLink.TextSize = 16
@@ -325,7 +335,8 @@ premiumMenuButtonCorner.Parent = premiumMenuButton
 
 -- Terapkan logika minimize ke semua frame menu
 setupMinimizeLogic(mainFrame)
-setupResizeLogic(mainFrame)
+setupResizeLogic(mainFrame, mainFrame.ResizeHandle, "right")
+setupResizeLogic(mainFrame, mainFrame.ResizeHandleLeft, "left")
 
 function createFreeMenu()
     local freeMenuFrame = mainFrame:Clone()
@@ -375,7 +386,8 @@ function createFreeMenu()
         end
     end)
     setupMinimizeLogic(freeMenuFrame)
-    setupResizeLogic(freeMenuFrame)
+    setupResizeLogic(freeMenuFrame, freeMenuFrame.ResizeHandle, "right")
+    setupResizeLogic(freeMenuFrame, freeMenuFrame.ResizeHandleLeft, "left")
 end
 
 function createPremiumMenu()
@@ -440,7 +452,8 @@ function createPremiumMenu()
         end
     end)
     setupMinimizeLogic(premiumMenuFrame)
-    setupResizeLogic(premiumMenuFrame)
+    setupResizeLogic(premiumMenuFrame, premiumMenuFrame.ResizeHandle, "right")
+    setupResizeLogic(premiumMenuFrame, premiumMenuFrame.ResizeHandleLeft, "left")
 end
 
 freeMenuButton.MouseButton1Click:Connect(function()
