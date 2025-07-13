@@ -16,7 +16,7 @@ local CoreGui = game:GetService("CoreGui")
 local CONFIG = {
     -- URL to your Replit verification server endpoint.
     VERIFICATION_ENDPOINT = "https://6af326c8-e255-40fb-a584-9c57993e4e7e-00-2228rk1ako92d.picard.replit.dev/verify",
-    DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link"
+    DISCORD_INVITE_LINK = "https://discord.gg/5MhMjmVA"
 }
 
 --================================================================--
