@@ -3,52 +3,6 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "MyGui"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Frame untuk sistem kunci
-local keyFrame = Instance.new("Frame")
-keyFrame.Name = "KeyFrame"
-keyFrame.Parent = screenGui
-keyFrame.Size = UDim2.new(0, 300, 0, 150)
-keyFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
-keyFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-keyFrame.BorderSizePixel = 0
-local keyFrameCorner = Instance.new("UICorner")
-keyFrameCorner.CornerRadius = UDim.new(0, 8)
-keyFrameCorner.Parent = keyFrame
-
-local keyTitle = Instance.new("TextLabel")
-keyTitle.Name = "KeyTitle"
-keyTitle.Parent = keyFrame
-keyTitle.Size = UDim2.new(1, 0, 0, 30)
-keyTitle.Text = "Enter Key"
-keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-keyTitle.Font = Enum.Font.SourceSansBold
-keyTitle.TextSize = 18
-keyTitle.BackgroundTransparency = 1
-
-local keyInput = Instance.new("TextBox")
-keyInput.Name = "KeyInput"
-keyInput.Parent = keyFrame
-keyInput.Size = UDim2.new(0, 260, 0, 40)
-keyInput.Position = UDim2.new(0.5, -130, 0, 40)
-keyInput.PlaceholderText = "Your Key"
-keyInput.Font = Enum.Font.SourceSans
-keyInput.TextSize = 16
-
-local submitKeyButton = Instance.new("TextButton")
-submitKeyButton.Name = "SubmitKeyButton"
-submitKeyButton.Parent = keyFrame
-submitKeyButton.Size = UDim2.new(0, 100, 0, 40)
-submitKeyButton.Position = UDim2.new(0.5, -50, 0, 90)
-submitKeyButton.Text = "Submit"
-submitKeyButton.Font = Enum.Font.SourceSansBold
-submitKeyButton.TextSize = 18
-submitKeyButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-submitKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-local submitKeyButtonCorner = Instance.new("UICorner")
-submitKeyButtonCorner.CornerRadius = UDim.new(0, 8)
-submitKeyButtonCorner.Parent = submitKeyButton
-
-
 -- Membuat Frame utama sebagai jendela
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
@@ -150,8 +104,6 @@ local function setupMinimizeLogic(frame)
 end
 
 -- Logika sistem kunci
-local correctKey = "WalvyKey"
-
 -- Frame Pemilihan Menu
 local selectionFrame = Instance.new("Frame")
 selectionFrame.Name = "SelectionFrame"
@@ -160,10 +112,50 @@ selectionFrame.Size = UDim2.new(0, 300, 0, 150)
 selectionFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
 selectionFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 selectionFrame.BorderSizePixel = 0
-selectionFrame.Visible = false
+selectionFrame.Visible = true
 local selectionFrameCorner = Instance.new("UICorner")
 selectionFrameCorner.CornerRadius = UDim.new(0, 8)
 selectionFrameCorner.Parent = selectionFrame
+
+-- Notifikasi Discord
+local discordNotification = Instance.new("Frame")
+discordNotification.Name = "DiscordNotification"
+discordNotification.Parent = screenGui
+discordNotification.Size = UDim2.new(0, 300, 0, 100)
+discordNotification.Position = UDim2.new(0.5, -150, 0.5, -200) -- Pindahkan ke atas selectionFrame
+discordNotification.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+local discordCorner = Instance.new("UICorner")
+discordCorner.CornerRadius = UDim.new(0, 8)
+discordCorner.Parent = discordNotification
+
+local discordTitle = Instance.new("TextLabel")
+discordTitle.Parent = discordNotification
+discordTitle.Size = UDim2.new(1, 0, 0, 30)
+discordTitle.Text = "Join our Discord!"
+discordTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+discordTitle.Font = Enum.Font.SourceSansBold
+discordTitle.TextSize = 18
+discordTitle.BackgroundTransparency = 1
+
+local discordLink = Instance.new("TextButton")
+discordLink.Parent = discordNotification
+discordLink.Size = UDim2.new(0, 200, 0, 40)
+discordLink.Position = UDim2.new(0.5, -100, 0, 40)
+discordLink.Text = "Click to copy link"
+discordLink.Font = Enum.Font.SourceSans
+discordLink.TextSize = 16
+discordLink.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+discordLink.TextColor3 = Color3.fromRGB(255, 255, 255)
+local discordLinkCorner = Instance.new("UICorner")
+discordLinkCorner.CornerRadius = UDim.new(0, 8)
+discordLinkCorner.Parent = discordLink
+
+discordLink.MouseButton1Click:Connect(function()
+	if setclipboard then
+		setclipboard("https://discord.gg/your-invite-link") -- Ganti dengan tautan Discord Anda
+	end
+	discordNotification:Destroy()
+end)
 
 local selectionTitle = Instance.new("TextLabel")
 selectionTitle.Name = "SelectionTitle"
@@ -222,56 +214,6 @@ premiumMenuFrame.TitleLabel.Text = "Premium Menu"
 setupMinimizeLogic(mainFrame)
 setupMinimizeLogic(freeMenuFrame)
 setupMinimizeLogic(premiumMenuFrame)
-
-
-submitKeyButton.MouseButton1Click:Connect(function()
-	if keyInput.Text == correctKey then
-		keyFrame:Destroy()
-		selectionFrame.Visible = true
-
-		-- Notifikasi Discord
-		local discordNotification = Instance.new("Frame")
-		discordNotification.Name = "DiscordNotification"
-		discordNotification.Parent = screenGui
-		discordNotification.Size = UDim2.new(0, 300, 0, 100)
-		discordNotification.Position = UDim2.new(0.5, -150, 0.5, -50)
-		discordNotification.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-		local discordCorner = Instance.new("UICorner")
-		discordCorner.CornerRadius = UDim.new(0, 8)
-		discordCorner.Parent = discordNotification
-
-		local discordTitle = Instance.new("TextLabel")
-		discordTitle.Parent = discordNotification
-		discordTitle.Size = UDim2.new(1, 0, 0, 30)
-		discordTitle.Text = "Join our Discord!"
-		discordTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-		discordTitle.Font = Enum.Font.SourceSansBold
-		discordTitle.TextSize = 18
-		discordTitle.BackgroundTransparency = 1
-
-		local discordLink = Instance.new("TextButton")
-		discordLink.Parent = discordNotification
-		discordLink.Size = UDim2.new(0, 200, 0, 40)
-		discordLink.Position = UDim2.new(0.5, -100, 0, 40)
-		discordLink.Text = "Click to copy link"
-		discordLink.Font = Enum.Font.SourceSans
-		discordLink.TextSize = 16
-		discordLink.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-		discordLink.TextColor3 = Color3.fromRGB(255, 255, 255)
-		local discordLinkCorner = Instance.new("UICorner")
-		discordLinkCorner.CornerRadius = UDim.new(0, 8)
-		discordLinkCorner.Parent = discordLink
-
-		discordLink.MouseButton1Click:Connect(function()
-			if setclipboard then
-				setclipboard("https://discord.gg/your-invite-link") -- Ganti dengan tautan Discord Anda
-			end
-			discordNotification:Destroy()
-		end)
-	else
-		keyInput.Text = "Incorrect Key"
-	end
-end)
 
 freeMenuButton.MouseButton1Click:Connect(function()
 	selectionFrame:Destroy()
