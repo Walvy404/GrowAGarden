@@ -1,12 +1,575 @@
---[[
-    Script: Walvy Community GUI
-    Description: A versatile GUI script with a key system, free/premium menus, and dynamic UI creation.
-    Features: Draggable, Minimizable, Closable, Color Themed.
-]]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walvy Comunity Notification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
---================================================================--
--- GUI ELEMENTS
---================================================================--
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4a7c59 0%, #a8d5a8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background pattern */
+        .background-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 2px, transparent 2px),
+                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 2px, transparent 2px);
+            background-size: 40px 40px;
+            transform: rotate(45deg);
+        }
+
+        /* Upload circle background */
+        .upload-circle {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(10px);
+        }
+
+        .upload-arrow {
+            width: 60px;
+            height: 60px;
+            fill: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Notification container */
+        .notification-container {
+            position: relative;
+            z-index: 100;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .notification {
+            background: rgba(45, 45, 45, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 300px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .icon-symbol {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .notification-status {
+            font-size: 14px;
+            color: #4CAF50;
+            font-weight: 500;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        /* Demo button */
+        .demo-button {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(-50%) translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <div class="upload-circle">
+        <svg class="upload-arrow" viewBox="0 0 24 24">
+            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+        </svg>
+    </div>
+
+    <div class="notification-container" id="notificationContainer">
+        <div class="notification">
+            <div class="notification-header">
+                <div class="notification-icon">
+                    <svg class="icon-symbol" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Walvy Comunity</div>
+                    <div class="notification-status">Key Valid</div>
+                </div>
+                <button class="notification-close" onclick="closeNotification()">×</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="demo-button" onclick="showNotification()">Show Notification</button>
+
+    <script>
+        let notificationTimeout;
+
+        function showNotification() {
+            const container = document.getElementById('notificationContainer');
+            
+            // Clear any existing timeout
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+            
+            // Reset animation
+            container.classList.remove('fade-out');
+            container.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            notificationTimeout = setTimeout(() => {
+                closeNotification();
+            }, 5000);
+        }
+
+        function closeNotification() {
+            const container = document.getElementById('notificationContainer');
+            container.classList.add('fade-out');
+            
+            // Hide after animation completes
+            setTimeout(() => {
+                container.style.display = 'none';
+            }, 300);
+            
+            // Clear timeout
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+        }
+
+        // Show notification on page load
+        window.addEventListener('load', () => {
+            setTimeout(showNotification, 500);
+        });
+    </script>
+</body>
+</html>
+import React, { useState, useEffect } from 'react';
+import './NotificationComponent.css';
+
+const NotificationComponent = ({ 
+  title = "Walvy Comunity", 
+  status = "Key Valid", 
+  autoHide = true, 
+  duration = 5000,
+  onClose 
+}) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (autoHide) {
+      const timer = setTimeout(() => {
+        handleClose();
+      }, duration);
+
+      return () => clearTimeout(timer);
+    }
+  }, [autoHide, duration]);
+
+  const handleClose = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      if (onClose) onClose();
+    }, 300);
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="notification-wrapper">
+      <div className="background-pattern"></div>
+      
+      <div className="upload-circle">
+        <svg className="upload-arrow" viewBox="0 0 24 24">
+          <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+        </svg>
+      </div>
+
+      <div className={`notification-container ${isAnimating ? 'fade-out' : ''}`}>
+        <div className="notification">
+          <div className="notification-header">
+            <div className="notification-icon">
+              <svg className="icon-symbol" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+            <div className="notification-content">
+              <div className="notification-title">{title}</div>
+              <div className="notification-status">{status}</div>
+            </div>
+            <button className="notification-close" onClick={handleClose}>×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NotificationComponent;
+
+.notification-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #4a7c59 0%, #a8d5a8 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Background pattern */
+.background-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 2px, transparent 2px),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 2px, transparent 2px);
+  background-size: 40px 40px;
+  transform: rotate(45deg);
+}
+
+/* Upload circle background */
+.upload-circle {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(10px);
+}
+
+.upload-arrow {
+  width: 60px;
+  height: 60px;
+  fill: rgba(255, 255, 255, 0.8);
+}
+
+/* Notification container */
+.notification-container {
+  position: relative;
+  z-index: 100;
+  animation: slideIn 0.5s ease-out;
+}
+
+.notification {
+  background: rgba(45, 45, 45, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 15px;
+  padding: 20px;
+  min-width: 300px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.notification-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+}
+
+.icon-symbol {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 2px;
+  font-family: 'Arial', sans-serif;
+}
+
+.notification-status {
+  font-size: 14px;
+  color: #4CAF50;
+  font-weight: 500;
+  font-family: 'Arial', sans-serif;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-in forwards;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .notification {
+    min-width: 280px;
+    margin: 20px;
+  }
+  
+  .upload-circle {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .upload-arrow {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+import NotificationComponent from './NotificationComponent';
+
+function App() {
+  const [showNotification, setShowNotification] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setShowNotification(true)}>
+        Show Notification
+      </button>
+
+      {showNotification && (
+        <NotificationComponent
+          title="Walvy Comunity"
+          status="Key Valid"
+          autoHide={true}
+          duration={5000}
+          onClose={() => setShowNotification(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+import React, { useState } from 'react';
+import NotificationComponent from './NotificationComponent';
+
+function App() {
+  const [showNotification, setShowNotification] = useState(false);
+
+  const handleShowNotification = () => {
+    setShowNotification(true);
+  };
+
+  const handleCloseNotification = () => {
+    setShowNotification(false);
+  };
+
+  return (
+    <div className="App">
+      <div style={{ 
+        height: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0'
+      }}>
+        <button 
+          onClick={handleShowNotification}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#4a7c59',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            cursor: 'pointer',
+            fontWeight: '600'
+          }}
+        >
+          Show Walvy Comunity Notification
+        </button>
+      </div>
+
+      {showNotification && (
+        <NotificationComponent
+          title="Walvy Comunity"
+          status="Key Valid"
+          autoHide={true}
+          duration={5000}
+          onClose={handleCloseNotification}
+        />
+      )}
+    </div>
+  );
+}
+
+export default App;
 
 -- Main ScreenGui
 local screenGui = Instance.new("ScreenGui")
