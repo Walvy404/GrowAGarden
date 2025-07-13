@@ -175,13 +175,6 @@ local function setupMinimizeLogic(frame)
 	end)
 end
 
-local function setupCloseLogic(frame)
-    local closeButton = frame:FindFirstChild("TitleBar"):FindFirstChild("CloseButton")
-    closeButton.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
-    end)
-end
-
 
 -- Logika sistem kunci
 -- Frame Pemilihan Menu
@@ -329,7 +322,9 @@ function createFreeMenu()
         end
     end)
     setupMinimizeLogic(freeMenuFrame)
-    setupCloseLogic(freeMenuFrame)
+    freeMenuFrame.TitleBar.CloseButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
     lastActiveFrame = freeMenuFrame
 end
 
@@ -395,7 +390,9 @@ function createPremiumMenu()
         end
     end)
     setupMinimizeLogic(premiumMenuFrame)
-    setupCloseLogic(premiumMenuFrame)
+    premiumMenuFrame.TitleBar.CloseButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
     lastActiveFrame = premiumMenuFrame
 end
 
