@@ -97,7 +97,7 @@ local minimizeButton = Instance.new("TextButton")
 minimizeButton.Name = "MinimizeButton"
 minimizeButton.Parent = titleBar
 minimizeButton.Size = UDim2.new(0, 30, 1, 0)
-minimizeButton.Position = UDim2.new(1, -30, 0, 0)
+minimizeButton.Position = UDim2.new(1, -60, 0, 0)
 minimizeButton.Text = "-"
 minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -130,6 +130,22 @@ communityLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 communityLabel.Font = Enum.Font.SourceSans
 communityLabel.TextSize = 16
 communityLabel.BackgroundTransparency = 1
+
+-- Tombol silang untuk menutup
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Parent = titleBar
+closeButton.Size = UDim2.new(0, 30, 1, 0)
+closeButton.Position = UDim2.new(1, -30, 0, 0)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 20
+closeButton.BorderSizePixel = 0
+local closeButtonCorner = Instance.new("UICorner")
+closeButtonCorner.CornerRadius = UDim.new(0, 8)
+closeButtonCorner.Parent = closeButton
 
 -- Logika untuk minimize/maximize
 -- Fungsi untuk logika minimize/maximize
@@ -173,6 +189,13 @@ local function setupMinimizeLogic(frame)
 			minimizeButton.Text = "-"
 		end
 	end)
+end
+
+local function setupCloseLogic(frame)
+    local closeButton = frame:FindFirstChild("TitleBar"):FindFirstChild("CloseButton")
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
 end
 
 
@@ -274,6 +297,7 @@ premiumMenuButtonCorner.Parent = premiumMenuButton
 
 -- Terapkan logika minimize ke semua frame menu
 setupMinimizeLogic(mainFrame)
+setupCloseLogic(mainFrame)
 
 function createFreeMenu()
     local freeMenuFrame = mainFrame:Clone()
@@ -323,6 +347,7 @@ function createFreeMenu()
         end
     end)
     setupMinimizeLogic(freeMenuFrame)
+    setupCloseLogic(freeMenuFrame)
 end
 
 function createPremiumMenu()
@@ -387,6 +412,7 @@ function createPremiumMenu()
         end
     end)
     setupMinimizeLogic(premiumMenuFrame)
+    setupCloseLogic(premiumMenuFrame)
 end
 
 freeMenuButton.MouseButton1Click:Connect(function()
