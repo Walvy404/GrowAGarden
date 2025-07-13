@@ -134,7 +134,7 @@ function App:OnKeySubmit(player, key, statusLabel, successCallback)
     statusLabel.Text = "Checking key..."
 
     local success, result = pcall(function()
-        return self.keyTimeStore:GetAsync(player.UserId .. "_" .. CONFIG.CORRECT_KEY)
+        return self.keyTimeStore:GetAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY)
     end)
 
     if not success then
@@ -154,7 +154,7 @@ function App:OnKeySubmit(player, key, statusLabel, successCallback)
         -- This block runs if activationTime is nil (new key) or expired.
         statusLabel.Text = "Key is valid, activating..."
         local setSuccess, setError = pcall(function()
-            self.keyTimeStore:SetAsync(player.UserId .. "_" .. CONFIG.CORRECT_KEY, currentTime)
+            self.keyTimeStore:SetAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY, currentTime)
         end)
         if setSuccess then
             statusLabel.Text = "Key activated! Opening menu..."
@@ -174,7 +174,7 @@ function App:CheckForExistingKeySession(player, successCallback)
     end
 
     local success, result = pcall(function()
-        return self.keyTimeStore:GetAsync(player.UserId .. "_" .. CONFIG.CORRECT_KEY)
+        return self.keyTimeStore:GetAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY)
     end)
 
     if not success then
@@ -188,7 +188,7 @@ function App:CheckForExistingKeySession(player, successCallback)
     elseif activationTime then
         -- Key exists but is expired, remove it.
         local _, removeError = pcall(function()
-            self.keyTimeStore:RemoveAsync(player.UserId .. "_" .. CONFIG.CORRECT_KEY)
+            self.keyTimeStore:RemoveAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY)
         end)
         if removeError then
             warn("WalvyXploit: Failed to remove expired key. Error: " .. tostring(removeError))
