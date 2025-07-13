@@ -55,7 +55,7 @@ mainFrame.Name = "MainFrame"
 mainFrame.Parent = screenGui
 mainFrame.Visible = false -- Sembunyikan pada awalnya
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Size = UDim2.new(0, 500, 0, 400)
 mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 mainFrame.BorderSizePixel = 0
@@ -228,8 +228,8 @@ local function setupResizeLogic(frame, handle, direction)
             end
             local newSizeY = startSize.Y.Offset + delta.Y
 
-            if newSizeX < 200 then newSizeX = 200 end
-            if newSizeY < 150 then newSizeY = 150 end
+            if newSizeX < 400 then newSizeX = 400 end
+            if newSizeY < 300 then newSizeY = 300 end
 
             frame.Size = UDim2.new(0, newSizeX, 0, newSizeY)
         end
