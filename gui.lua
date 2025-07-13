@@ -55,14 +55,12 @@ mainFrame.Name = "MainFrame"
 mainFrame.Parent = screenGui
 mainFrame.Visible = false -- Sembunyikan pada awalnya
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.Size = UDim2.new(0, 27000, 0, 2800)
+mainFrame.Size = UDim2.new(0, 600, 0, 500)
 mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 mainFrame.BorderSizePixel = 0
-freeMenuFrame.Name = "FreeMenuFrame"
-freeMenuFrame.Parent = screenGui
-freeMenuFrame.Visible = true
-freeMenuFrame.TitleLabel.Text = "Free Menu"
+mainFrame.Draggable = true
+mainFrame.Active = true
 
 -- Menambahkan pembulatan sudut pada frame utama
 local cornerRadius = Instance.new("UICorner")
