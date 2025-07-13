@@ -1,20 +1,27 @@
 --[[
-    Script: WalvyXploit GUI with Timed Key System
-    Description: A Roblox GUI script featuring a key system that allows access for 8 hours per key activation.
-                 This version includes improved error handling and debugging for the key system.
+    Script: WalvyXploit GUI with HTTP Key System
+    Description: A Roblox GUI script featuring a key system that verifies keys via an external web server.
     Author: Walvy
-    Version: 1.6 (Key System Hotfix)
+    Version: 2.0 (HTTP Verification)
 ]]
 
 --================================================================--
--- Environment Compatibility & Polyfills
+-- Services and Configuration
 --================================================================--
 
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local DataStoreService = game:GetService("DataStoreService")
 local CoreGui = game:GetService("CoreGui")
 
-local _tick = tick or os.time
+local CONFIG = {
+    -- URL to your Replit verification server endpoint.
+    VERIFICATION_ENDPOINT = "https://6af326c8-e255-40fb-a584-9c57993e4e7e-00-2228rk1ako92d.picard.replit.dev/verify",
+    DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link"
+}
+
+--================================================================--
+-- Environment Compatibility
+--================================================================--
 
 local function safeSetClipboard(text)
     if typeof(setclipboard) == "function" then
@@ -25,21 +32,8 @@ local function safeSetClipboard(text)
 end
 
 --================================================================--
--- Configuration
+-- GUI Component Constructors (Largely unchanged)
 --================================================================--
-
-local CONFIG = {
-    CORRECT_KEY = "i",
-    DISCORD_INVITE_LINK = "https://discord.gg/5MhMjmVA",
-    KEY_VALID_DURATION = , -- sett 28800 untuk menjadi 8jam
-    DATASTORE_NAME = "WalvyKeyActivationTimeStore"
-}
-
---================================================================--
--- GUI Component Constructors
---================================================================--
--- NOTE: GUI creation functions are unchanged from the previous version.
--- They are omitted here for brevity but are the same as in v1.5.
 local function createCorner(parent, radius) local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, radius); corner.Parent = parent; end
 local function createMenuBase(parent, title, reopenButton) local menuFrame = Instance.new("Frame"); menuFrame.Name = title:gsub("%s", "") .. "Frame"; menuFrame.AnchorPoint = Vector2.new(0.5, 0.5); menuFrame.Size = UDim2.new(0, 600, 0, 500); menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0); menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); menuFrame.Draggable = true; menuFrame.Active = true; menuFrame.Parent = parent; createCorner(menuFrame, 8); local titleBar = Instance.new("Frame"); titleBar.Name = "TitleBar"; titleBar.Size = UDim2.new(1, 0, 0, 30); titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51); titleBar.Parent = menuFrame; createCorner(titleBar, 8); local titleLabel = Instance.new("TextLabel"); titleLabel.Name = "TitleLabel"; titleLabel.Size = UDim2.new(1, -60, 1, 0); titleLabel.Position = UDim2.new(0, 10, 0, 0); titleLabel.Text = title; titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.SourceSansBold; titleLabel.TextSize = 18; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.Parent = titleBar; local minimize = Instance.new("TextButton"); minimize.Name = "MinimizeButton"; minimize.Size = UDim2.new(0, 30, 1, 0); minimize.Position = UDim2.new(1, -60, 0, 0); minimize.Text = "—"; minimize.TextColor3 = Color3.fromRGB(255, 255, 255); minimize.BackgroundColor3 = titleBar.BackgroundColor3; minimize.Font = Enum.Font.SourceSansBold; minimize.TextSize = 24; minimize.Parent = titleBar; createCorner(minimize, 8); local close = Instance.new("TextButton"); close.Name = "CloseButton"; close.Size = UDim2.new(0, 30, 1, 0); close.Position = UDim2.new(1, -30, 0, 0); close.Text = "✕"; close.TextColor3 = Color3.fromRGB(255, 255, 255); close.BackgroundColor3 = Color3.fromRGB(180, 0, 0); close.Font = Enum.Font.SourceSansBold; close.TextSize = 20; close.Parent = titleBar; createCorner(close, 8); minimize.MouseButton1Click:Connect(function() menuFrame.Visible = false; if reopenButton then reopenButton.Visible = true end end); close.MouseButton1Click:Connect(function() parent:Destroy() end); return menuFrame; end
 
@@ -50,29 +44,20 @@ local function createMenuBase(parent, title, reopenButton) local menuFrame = Ins
 local App = {}
 App.lastActiveMenu = nil
 App.screenGui = nil
-App.keyTimeStore = nil
+App.isVerifying = false -- Debounce to prevent spamming the verify button
 
 function App:Init()
     local localPlayer = Players.LocalPlayer
     if not localPlayer then
-        warn("WalvyXploit: Could not find LocalPlayer. Script will not run.")
+        warn("WalvyXploit: Could not find LocalPlayer.")
         return
     end
 
     local playerGui = CoreGui:FindFirstChild("RobloxGui") or localPlayer:WaitForChild("PlayerGui")
     if not playerGui then
-        warn("WalvyXploit: Could not find a valid GUI parent. Script will not run.")
+        warn("WalvyXploit: Could not find a valid GUI parent.")
         return
     end
-
-    local success, store = pcall(function()
-        return DataStoreService:GetDataStore(CONFIG.DATASTORE_NAME)
-    end)
-    if not success then
-        warn("WalvyXploit: Critical error initializing DataStore. Key system will not work. Error: " .. tostring(store))
-        -- We can still load the GUI, but the key system will fail gracefully.
-    end
-    self.keyTimeStore = store
 
     self.screenGui = Instance.new("ScreenGui")
     self.screenGui.Name = "WalvyXploitGui"
@@ -91,7 +76,11 @@ function App:Init()
     end
 
     keySystem.submit.MouseButton1Click:Connect(function()
+        if self.isVerifying then return end
+        self.isVerifying = true
         self:OnKeySubmit(localPlayer, keySystem.input.Text, keySystem.status, showMainMenu)
+        task.wait(1) -- Cooldown
+        self.isVerifying = false
     end)
 
     menuSelection.freeButton.MouseButton1Click:Connect(function()
@@ -110,89 +99,52 @@ function App:Init()
         if self.lastActiveMenu and self.lastActiveMenu.Parent then self.lastActiveMenu.Visible = true end
         reopenButton.Visible = false
     end)
-
-    self:CheckForExistingKeySession(localPlayer, showMainMenu)
 end
 
+-- Component creation functions moved into App table
 function App:CreateKeySystem(parent) local keyFrame = Instance.new("Frame"); keyFrame.Name = "KeyFrame"; keyFrame.AnchorPoint = Vector2.new(0.5, 0.5); keyFrame.Size = UDim2.new(0, 300, 0, 180); keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0); keyFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); keyFrame.Parent = parent; createCorner(keyFrame, 8); local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Enter Key"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = keyFrame; local input = Instance.new("TextBox"); input.Name = "Input"; input.Size = UDim2.new(0, 260, 0, 40); input.Position = UDim2.new(0.5, -130, 0, 40); input.PlaceholderText = "Your Key"; input.Font = Enum.Font.SourceSans; input.TextSize = 16; input.Parent = keyFrame; local status = Instance.new("TextLabel"); status.Name = "Status"; status.Size = UDim2.new(1, -40, 0, 20); status.Position = UDim2.new(0.5, 0, 0, 85); status.AnchorPoint = Vector2.new(0.5, 0); status.Text = ""; status.Font = Enum.Font.SourceSans; status.TextSize = 14; status.TextColor3 = Color3.fromRGB(255, 80, 80); status.BackgroundTransparency = 1; status.Parent = keyFrame; local submit = Instance.new("TextButton"); submit.Name = "Submit"; submit.Size = UDim2.new(0, 100, 0, 40); submit.Position = UDim2.new(0.5, -50, 0, 115); submit.Text = "Submit"; submit.Font = Enum.Font.SourceSansBold; submit.TextSize = 18; submit.BackgroundColor3 = Color3.fromRGB(50, 58, 82); submit.TextColor3 = Color3.fromRGB(255, 255, 255); submit.Parent = keyFrame; createCorner(submit, 8); return { frame = keyFrame, input = input, submit = submit, status = status }; end
 function App:CreateMenuSelection(parent) local selectionFrame = Instance.new("Frame"); selectionFrame.Name = "SelectionFrame"; selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5); selectionFrame.Size = UDim2.new(0, 300, 0, 150); selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0); selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); selectionFrame.Visible = false; selectionFrame.Parent = parent; createCorner(selectionFrame, 8); local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Select Menu"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = selectionFrame; local freeButton = Instance.new("TextButton"); freeButton.Name = "FreeButton"; freeButton.Size = UDim2.new(0, 120, 0, 50); freeButton.Position = UDim2.new(0.5, -130, 0.5, -25); freeButton.Text = "Free Menu"; freeButton.Font = Enum.Font.SourceSansBold; freeButton.TextSize = 18; freeButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82); freeButton.TextColor3 = Color3.fromRGB(255, 255, 255); freeButton.Parent = selectionFrame; createCorner(freeButton, 8); local premiumButton = Instance.new("TextButton"); premiumButton.Name = "PremiumButton"; premiumButton.Size = UDim2.new(0, 120, 0, 50); premiumButton.Position = UDim2.new(0.5, 10, 0.5, -25); premiumButton.Text = "Premium Menu"; premiumButton.Font = Enum.Font.SourceSansBold; premiumButton.TextSize = 18; premiumButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0); premiumButton.TextColor3 = Color3.fromRGB(0, 0, 0); premiumButton.Parent = selectionFrame; createCorner(premiumButton, 8); return { frame = selectionFrame, freeButton = freeButton, premiumButton = premiumButton }; end
 function App:CreateDiscordBanner(parent) local discordFrame = Instance.new("Frame"); discordFrame.Name = "DiscordNotification"; discordFrame.AnchorPoint = Vector2.new(0.5, 0); discordFrame.Size = UDim2.new(0, 300, 0, 60); discordFrame.Position = UDim2.new(0.5, 0, 0, 10); discordFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); discordFrame.Visible = false; discordFrame.Parent = parent; createCorner(discordFrame, 8); local title = Instance.new("TextLabel"); title.Size = UDim2.new(1, 0, 0.5, 0); title.Text = "Join our Discord!"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = discordFrame; local link = Instance.new("TextButton"); link.Size = UDim2.new(0, 200, 0, 30); link.Position = UDim2.new(0.5, -100, 0.5, 0); link.Text = "Click to copy link"; link.Font = Enum.Font.SourceSans; link.TextSize = 16; link.BackgroundColor3 = Color3.fromRGB(88, 101, 242); link.TextColor3 = Color3.fromRGB(255, 255, 255); link.Parent = discordFrame; createCorner(link, 8); return { frame = discordFrame, link = link }; end
 function App:CreateReopenButton(parent) local reopenBtn = Instance.new("TextButton"); reopenBtn.Name = "ReopenButton"; reopenBtn.AnchorPoint = Vector2.new(0.5, 0); reopenBtn.Size = UDim2.new(0, 150, 0, 50); reopenBtn.Position = UDim2.new(0.5, 0, 0, 5); reopenBtn.Text = "Open Menu"; reopenBtn.Font = Enum.Font.SourceSansBold; reopenBtn.TextSize = 16; reopenBtn.BackgroundColor3 = Color3.fromRGB(50, 58, 82); reopenBtn.TextColor3 = Color3.fromRGB(255, 255, 255); reopenBtn.Visible = false; reopenBtn.Parent = parent; createCorner(reopenBtn, 8); return reopenBtn; end
 
+--- Handles the key submission by sending a request to the web server.
 function App:OnKeySubmit(player, key, statusLabel, successCallback)
-    if not self.keyTimeStore then
-        statusLabel.Text = "Error: Key system is offline."
-        warn("WalvyXploit: OnKeySubmit failed because DataStore is not available.")
+    if not key or key == "" then
+        statusLabel.Text = "Please enter a key."
         return
     end
 
-    if key ~= CONFIG.CORRECT_KEY then
-        statusLabel.Text = "Incorrect Key"
-        return
-    end
+    statusLabel.Text = "Verifying key..."
 
-    statusLabel.Text = "Checking key..."
+    local requestUrl = string.format("%s?key=%s&userId=%s", CONFIG.VERIFICATION_ENDPOINT, key, tostring(player.UserId))
 
-    local success, result = pcall(function()
-        return self.keyTimeStore:GetAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY)
+    local success, responseBody = pcall(function()
+        return HttpService:GetAsync(requestUrl)
     end)
 
     if not success then
-        statusLabel.Text = "Error: Could not verify key. Try again."
-        warn("WalvyXploit: GetAsync failed. Error: " .. tostring(result))
+        statusLabel.Text = "Error: Verification server unreachable."
+        warn("WalvyXploit: HTTP request failed. Error: ", responseBody)
         return
     end
 
-    local activationTime = result
-    local currentTime = _tick()
+    local responseData
+    local decodeSuccess, decodedJson = pcall(function()
+        responseData = HttpService:JSONDecode(responseBody)
+    end)
 
-    if activationTime and (currentTime - activationTime < CONFIG.KEY_VALID_DURATION) then
-        statusLabel.Text = "Key session active. Opening menu..."
+    if not decodeSuccess then
+        statusLabel.Text = "Error: Invalid server response."
+        warn("WalvyXploit: Failed to decode JSON response. Body: ", responseBody)
+        return
+    end
+
+    if responseData and responseData.status == "success" then
+        statusLabel.Text = "Key accepted! Opening menu..."
         task.wait(1)
         successCallback()
     else
-        -- This block runs if activationTime is nil (new key) or expired.
-        statusLabel.Text = "Key is valid, activating..."
-        local setSuccess, setError = pcall(function()
-            self.keyTimeStore:SetAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY, currentTime)
-        end)
-        if setSuccess then
-            statusLabel.Text = "Key activated! Opening menu..."
-            task.wait(1)
-            successCallback()
-        else
-            statusLabel.Text = "Error: Could not save key. Try again."
-            warn("WalvyXploit: SetAsync failed. Error: " .. tostring(setError))
-        end
-    end
-end
-
-function App:CheckForExistingKeySession(player, successCallback)
-    if not self.keyTimeStore then
-        warn("WalvyXploit: CheckForExistingKeySession failed because DataStore is not available.")
-        return
-    end
-
-    local success, result = pcall(function()
-        return self.keyTimeStore:GetAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY)
-    end)
-
-    if not success then
-        warn("WalvyXploit: Initial key check failed. Error: " .. tostring(result))
-        return
-    end
-
-    local activationTime = result
-    if activationTime and (_tick() - activationTime < CONFIG.KEY_VALID_DURATION) then
-        successCallback()
-    elseif activationTime then
-        -- Key exists but is expired, remove it.
-        local _, removeError = pcall(function()
-            self.keyTimeStore:RemoveAsync(player.UserId .. "Alomanii404" .. CONFIG.CORRECT_KEY)
-        end)
-        if removeError then
-            warn("WalvyXploit: Failed to remove expired key. Error: " .. tostring(removeError))
-        end
+        statusLabel.Text = responseData.message or "Invalid key."
     end
 end
 
@@ -202,5 +154,5 @@ end
 
 pcall(function()
     App:Init()
-    print("WalvyXploit GUI Loaded (v1.6).")
+    print("WalvyXploit GUI Loaded (v2.0).")
 end)
