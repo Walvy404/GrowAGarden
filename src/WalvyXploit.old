@@ -1,15 +1,3 @@
---[[
-    Script: WalvyXploit GUI with Timed Key System
-    Description: A Roblox GUI script featuring a key system that allows access for 8 hours per key activation.
-                 Optimized for broad executor compatibility, including Delta.
-    Author: Walvy
-    Version: 1.5 (Executor Compatibility)
-]]
-
---================================================================--
--- Environment Compatibility & Polyfills
---================================================================--
-
 -- Ensure standard services are available
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
