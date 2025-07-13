@@ -22,7 +22,7 @@ end
 
 local CONFIG = {
     CORRECT_KEY = "WalvyKey",
-    DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
+    DISCORD_INVITE_LINK = "https://discord.gg/5MhMjmVA",
     KEY_VALID_DURATION = 28800, -- 8 hours in seconds
     DATASTORE_NAME = "WalvyKeyActivationTimeStore" -- More unique name
 }
