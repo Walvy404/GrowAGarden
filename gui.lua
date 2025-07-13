@@ -71,6 +71,18 @@ minimizeButton.MouseLeave:Connect(function()
 	minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 end)
 
+-- Membuat teks "Walvy Community"
+local communityLabel = Instance.new("TextLabel")
+communityLabel.Name = "CommunityLabel"
+communityLabel.Parent = mainFrame
+communityLabel.Size = UDim2.new(1, 0, 0, 30)
+communityLabel.Position = UDim2.new(0, 0, 0, 40)
+communityLabel.Text = "Walvy Community"
+communityLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+communityLabel.Font = Enum.Font.SourceSans
+communityLabel.TextSize = 16
+communityLabel.BackgroundTransparency = 1
+
 -- Logika untuk minimize/maximize
 local minimized = false
 local originalSize = mainFrame.Size
