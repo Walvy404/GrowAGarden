@@ -146,12 +146,79 @@ minimizeButton.MouseButton1Click:Connect(function()
 end)
 
 -- Logika sistem kunci
-local correctKey = "WALVYXYZ"
+local correctKey = "WalvyKey"
+
+-- Frame Pemilihan Menu
+local selectionFrame = Instance.new("Frame")
+selectionFrame.Name = "SelectionFrame"
+selectionFrame.Parent = screenGui
+selectionFrame.Size = UDim2.new(0, 300, 0, 150)
+selectionFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+selectionFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+selectionFrame.BorderSizePixel = 0
+selectionFrame.Visible = false
+local selectionFrameCorner = Instance.new("UICorner")
+selectionFrameCorner.CornerRadius = UDim.new(0, 8)
+selectionFrameCorner.Parent = selectionFrame
+
+local selectionTitle = Instance.new("TextLabel")
+selectionTitle.Name = "SelectionTitle"
+selectionTitle.Parent = selectionFrame
+selectionTitle.Size = UDim2.new(1, 0, 0, 30)
+selectionTitle.Text = "Select Menu"
+selectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+selectionTitle.Font = Enum.Font.SourceSansBold
+selectionTitle.TextSize = 18
+selectionTitle.BackgroundTransparency = 1
+
+local freeMenuButton = Instance.new("TextButton")
+freeMenuButton.Name = "FreeMenuButton"
+freeMenuButton.Parent = selectionFrame
+freeMenuButton.Size = UDim2.new(0, 120, 0, 50)
+freeMenuButton.Position = UDim2.new(0.5, -130, 0.5, -25)
+freeMenuButton.Text = "Free Menu"
+freeMenuButton.Font = Enum.Font.SourceSansBold
+freeMenuButton.TextSize = 18
+freeMenuButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+freeMenuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+local freeMenuButtonCorner = Instance.new("UICorner")
+freeMenuButtonCorner.CornerRadius = UDim.new(0, 8)
+freeMenuButtonCorner.Parent = freeMenuButton
+
+local premiumMenuButton = Instance.new("TextButton")
+premiumMenuButton.Name = "PremiumMenuButton"
+premiumMenuButton.Parent = selectionFrame
+premiumMenuButton.Size = UDim2.new(0, 120, 0, 50)
+premiumMenuButton.Position = UDim2.new(0.5, 10, 0.5, -25)
+premiumMenuButton.Text = "Premium Menu"
+premiumMenuButton.Font = Enum.Font.SourceSansBold
+premiumMenuButton.TextSize = 18
+premiumMenuButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Gold color for premium
+premiumMenuButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+local premiumMenuButtonCorner = Instance.new("UICorner")
+premiumMenuButtonCorner.CornerRadius = UDim.new(0, 8)
+premiumMenuButtonCorner.Parent = premiumMenuButton
+
+
+-- Frame untuk Menu Gratis
+local freeMenuFrame = mainFrame:Clone()
+freeMenuFrame.Name = "FreeMenuFrame"
+freeMenuFrame.Parent = screenGui
+freeMenuFrame.Visible = false
+freeMenuFrame.TitleLabel.Text = "Free Menu"
+
+-- Frame untuk Menu Premium
+local premiumMenuFrame = mainFrame:Clone()
+premiumMenuFrame.Name = "PremiumMenuFrame"
+premiumMenuFrame.Parent = screenGui
+premiumMenuFrame.Visible = false
+premiumMenuFrame.TitleLabel.Text = "Premium Menu"
+
 
 submitKeyButton.MouseButton1Click:Connect(function()
 	if keyInput.Text == correctKey then
 		keyFrame:Destroy()
-		mainFrame.Visible = true
+		selectionFrame.Visible = true
 
 		-- Notifikasi Discord
 		local discordNotification = Instance.new("Frame")
@@ -188,11 +255,21 @@ submitKeyButton.MouseButton1Click:Connect(function()
 
 		discordLink.MouseButton1Click:Connect(function()
 			if setclipboard then
-				setclipboard("https://discord.gg/WahJckA7") -- Ganti dengan tautan Discord Anda
+				setclipboard("https://discord.gg/your-invite-link") -- Ganti dengan tautan Discord Anda
 			end
 			discordNotification:Destroy()
 		end)
 	else
 		keyInput.Text = "Incorrect Key"
 	end
+end)
+
+freeMenuButton.MouseButton1Click:Connect(function()
+	selectionFrame:Destroy()
+	freeMenuFrame.Visible = true
+end)
+
+premiumMenuButton.MouseButton1Click:Connect(function()
+	selectionFrame:Destroy()
+	premiumMenuFrame.Visible = true
 end)
