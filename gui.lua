@@ -1,6 +1,6 @@
 -- Membuat ScreenGui untuk menampung semua elemen GUI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "Walvy Comunity"
+screenGui.Name = "My Gui"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Frame untuk sistem kunci
