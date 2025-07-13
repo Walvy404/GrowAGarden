@@ -31,7 +31,7 @@ end
 local CONFIG = {
     CORRECT_KEY = "i",
     DISCORD_INVITE_LINK = "https://discord.gg/5MhMjmVA",
-    KEY_VALID_DURATION = 288000, -- sett 28800 untuk menjadi 8jam
+    KEY_VALID_DURATION = 0, -- sett 28800 untuk menjadi 8jam
     DATASTORE_NAME = "WalvyKeyActivationTimeStore, Alomanii404"
 }
 
