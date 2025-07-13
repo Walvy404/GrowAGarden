@@ -49,6 +49,23 @@ local submitKeyButtonCorner = Instance.new("UICorner")
 submitKeyButtonCorner.CornerRadius = UDim.new(0, 8)
 submitKeyButtonCorner.Parent = submitKeyButton
 
+-- Tombol untuk membuka kembali setelah minimize
+local reopenButton = Instance.new("TextButton")
+reopenButton.Name = "ReopenButton"
+reopenButton.Parent = screenGui
+reopenButton.Size = UDim2.new(0, 100, 0, 40)
+reopenButton.Position = UDim2.new(1, -110, 0, 10)
+reopenButton.Text = "Open Menu"
+reopenButton.Font = Enum.Font.SourceSansBold
+reopenButton.TextSize = 16
+reopenButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+reopenButton.Visible = false
+local reopenButtonCorner = Instance.new("UICorner")
+reopenButtonCorner.CornerRadius = UDim.new(0, 8)
+reopenButtonCorner.Parent = reopenButton
+
+
 -- Membuat Frame utama sebagai jendela
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
@@ -150,44 +167,11 @@ closeButtonCorner.Parent = closeButton
 -- Logika untuk minimize/maximize
 -- Fungsi untuk logika minimize/maximize
 local function setupMinimizeLogic(frame)
-	local titleBar = frame:FindFirstChild("TitleBar")
-	local minimizeButton = titleBar:FindFirstChild("MinimizeButton")
-
-	local originalSize
-    local originalPosition
-	local minimized = false
-
-    -- Perbarui posisi saat frame selesai dipindahkan
-    frame:GetPropertyChangedSignal("Position"):Connect(function()
-        if not minimized then
-            originalPosition = frame.Position
-        end
-    end)
-
-    -- Perbarui ukuran saat frame selesai di-resize
-    frame:GetPropertyChangedSignal("Size"):Connect(function()
-        if not minimized then
-            originalSize = frame.Size
-        end
-    end)
+	local minimizeButton = frame:FindFirstChild("TitleBar"):FindFirstChild("MinimizeButton")
 
 	minimizeButton.MouseButton1Click:Connect(function()
-		minimized = not minimized
-		if minimized then
-            originalSize = frame.Size
-            originalPosition = frame.Position
-            local titleBarHeight = titleBar.AbsoluteSize.Y
-			frame.Size = UDim2.new(0, originalSize.X.Offset, 0, titleBarHeight)
-
-            local newY = originalPosition.Y.Offset - (originalSize.Y.Offset / 2) + (titleBarHeight / 2)
-            frame.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset, originalPosition.Y.Scale, newY)
-
-			minimizeButton.Text = "+"
-		else
-			frame.Size = originalSize
-            frame.Position = originalPosition
-			minimizeButton.Text = "-"
-		end
+		frame.Visible = false
+        reopenButton.Visible = true
 	end)
 end
 
@@ -348,6 +332,7 @@ function createFreeMenu()
     end)
     setupMinimizeLogic(freeMenuFrame)
     setupCloseLogic(freeMenuFrame)
+    lastActiveFrame = freeMenuFrame
 end
 
 function createPremiumMenu()
@@ -413,6 +398,7 @@ function createPremiumMenu()
     end)
     setupMinimizeLogic(premiumMenuFrame)
     setupCloseLogic(premiumMenuFrame)
+    lastActiveFrame = premiumMenuFrame
 end
 
 freeMenuButton.MouseButton1Click:Connect(function()
@@ -435,4 +421,13 @@ submitKeyButton.MouseButton1Click:Connect(function()
 	else
 		keyInput.Text = "Incorrect Key"
 	end
+end)
+
+local lastActiveFrame = nil
+
+reopenButton.MouseButton1Click:Connect(function()
+    if lastActiveFrame then
+        lastActiveFrame.Visible = true
+    end
+    reopenButton.Visible = false
 end)
