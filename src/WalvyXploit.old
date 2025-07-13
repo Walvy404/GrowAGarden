@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walvy Comunity Notification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4a7c59 0%, #a8d5a8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background pattern */
+        .background-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 2px, transparent 2px),
+                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 2px, transparent 2px);
+            background-size: 40px 40px;
+            transform: rotate(45deg);
+        }
+
+        /* Upload circle background */
+        .upload-circle {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(10px);
+        }
+
+        .upload-arrow {
+            width: 60px;
+            height: 60px;
+            fill: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Notification container */
+        .notification-container {
+            position: relative;
+            z-index: 100;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .notification {
+            background: rgba(45, 45, 45, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 300px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .icon-symbol {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .notification-status {
+            font-size: 14px;
+            color: #4CAF50;
+            font-weight: 500;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        /* Demo button */
+        .demo-button {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(-50%) translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+
+    <div class="upload-circle">
+        <svg class="upload-arrow" viewBox="0 0 24 24">
+            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+        </svg>
+    </div>
+
+    <div class="notification-container" id="notificationContainer">
+        <div class="notification">
+            <div class="notification-header">
+                <div class="notification-icon">
+                    <svg class="icon-symbol" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Walvy Comunity</div>
+                    <div class="notification-status">Key Valid</div>
+                </div>
+                <button class="notification-close" onclick="closeNotification()">×</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="demo-button" onclick="showNotification()">Show Notification</button>
+
+    <script>
+        let notificationTimeout;
+
+        function showNotification() {
+            const container = document.getElementById('notificationContainer');
+
+            // Clear any existing timeout
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+
+            // Reset animation
+            container.classList.remove('fade-out');
+            container.style.display = 'block';
+
+            // Auto-hide after 5 seconds
+            notificationTimeout = setTimeout(() => {
+                closeNotification();
+            }, 5000);
+        }
+
+        function closeNotification() {
+            const container = document.getElementById('notificationContainer');
+            container.classList.add('fade-out');
+
+            // Hide after animation completes
+            setTimeout(() => {
+                container.style.display = 'none';
+            }, 300);
+
+            // Clear timeout
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+        }
+
+        // Show notification on page load
+        window.addEventListener('load', () => {
+            setTimeout(showNotification, 500);
+        });
+    </script>
+</body>
+</html>
+import React, { useState, useEffect } from 'react';
+import './NotificationComponent.css';
+
+const NotificationComponent = ({
+  title = "Walvy Comunity",
+  status = "Key Valid",
+  autoHide = true,
+  duration = 5000,
+  onClose
+}) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (autoHide) {
+      const timer = setTimeout(() => {
+        handleClose();
+      }, duration);
+
+      return () => clearTimeout(timer);
+    }
+  }, [autoHide, duration]);
+
+  const handleClose = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      if (onClose) onClose();
+    }, 300);
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="notification-wrapper">
+      <div className="background-pattern"></div>
+
+      <div className="upload-circle">
+        <svg className="upload-arrow" viewBox="0 0 24 24">
+          <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+        </svg>
+      </div>
+
+      <div className={`notification-container ${isAnimating ? 'fade-out' : ''}`}>
+        <div className="notification">
+          <div className="notification-header">
+            <div className="notification-icon">
+              <svg className="icon-symbol" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+            <div className="notification-content">
+              <div className="notification-title">{title}</div>
+              <div className="notification-status">{status}</div>
+            </div>
+            <button className="notification-close" onClick={handleClose}>×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NotificationComponent;
+
+.notification-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #4a7c59 0%, #a8d5a8 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Background pattern */
+.background-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 2px, transparent 2px),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 2px, transparent 2px);
+  background-size: 40px 40px;
+  transform: rotate(45deg);
+}
+
+/* Upload circle background */
+.upload-circle {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(10px);
+}
+
+.upload-arrow {
+  width: 60px;
+  height: 60px;
+  fill: rgba(255, 255, 255, 0.8);
+}
+
+/* Notification container */
+.notification-container {
+  position: relative;
+  z-index: 100;
+  animation: slideIn 0.5s ease-out;
+}
+
+.notification {
+  background: rgba(45, 45, 45, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 15px;
+  padding: 20px;
+  min-width: 300px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.notification-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+}
+
+.icon-symbol {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 2px;
+  font-family: 'Arial', sans-serif;
+}
+
+.notification-status {
+  font-size: 14px;
+  color: #4CAF50;
+  font-weight: 500;
+  font-family: 'Arial', sans-serif;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-in forwards;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .notification {
+    min-width: 280px;
+    margin: 20px;
+  }
+
+  .upload-circle {
+    width: 150px;
+    height: 150px;
+  }
+
+  .upload-arrow {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+import NotificationComponent from './NotificationComponent';
+
+function App() {
+  const [showNotification, setShowNotification] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setShowNotification(true)}>
+        Show Notification
+      </button>
+
+      {showNotification && (
+        <NotificationComponent
+          title="Walvy Comunity"
+          status="Key Valid"
+          autoHide={true}
+          duration={5000}
+          onClose={() => setShowNotification(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+import React, { useState } from 'react';
+import NotificationComponent from './NotificationComponent';
+
+function App() {
+  const [showNotification, setShowNotification] = useState(false);
+
+  const handleShowNotification = () => {
+    setShowNotification(true);
+  };
+
+  const handleCloseNotification = () => {
+    setShowNotification(false);
+  };
+
+  return (
+    <div className="App">
+      <div style={{
+        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0'
+      }}>
+        <button
+          onClick={handleShowNotification}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#4a7c59',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            cursor: 'pointer',
+            fontWeight: '600'
+          }}
+        >
+          Show Walvy Comunity Notification
+        </button>
+      </div>
+
+      {showNotification && (
+        <NotificationComponent
+          title="Walvy Comunity"
+          status="Key Valid"
+          autoHide={true}
+          duration={5000}
+          onClose={handleCloseNotification}
+        />
+      )}
+    </div>
+  );
+}
+
+export default App;
+
+-- Main ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MyGui"
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Key System Frame
+local keyFrame = Instance.new("Frame")
+keyFrame.Name = "KeyFrame"
+keyFrame.Parent = screenGui
+keyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+keyFrame.Size = UDim2.new(0, 300, 0, 150)
+keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+keyFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
+keyFrame.BorderSizePixel = 0
+local keyFrameCorner = Instance.new("UICorner", keyFrame)
+keyFrameCorner.CornerRadius = UDim.new(0, 8)
+
+local keyTitle = Instance.new("TextLabel")
+keyTitle.Name = "KeyTitle"
+keyTitle.Parent = keyFrame
+keyTitle.Size = UDim2.new(1, 0, 0, 30)
+keyTitle.Text = "Enter Key"
+keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyTitle.Font = Enum.Font.SourceSansBold
+keyTitle.TextSize = 18
+keyTitle.BackgroundTransparency = 1
+
+local keyInput = Instance.new("TextBox")
+keyInput.Name = "KeyInput"
+keyInput.Parent = keyFrame
+keyInput.Size = UDim2.new(0, 260, 0, 40)
+keyInput.Position = UDim2.new(0.5, -130, 0, 40)
+keyInput.PlaceholderText = "Your Key"
+keyInput.Font = Enum.Font.SourceSans
+keyInput.TextSize = 16
+
+local submitKeyButton = Instance.new("TextButton")
+submitKeyButton.Name = "SubmitKeyButton"
+submitKeyButton.Parent = keyFrame
+submitKeyButton.Size = UDim2.new(0, 100, 0, 40)
+submitKeyButton.Position = UDim2.new(0.5, -50, 0, 90)
+submitKeyButton.Text = "Submit"
+submitKeyButton.Font = Enum.Font.SourceSansBold
+submitKeyButton.TextSize = 18
+submitKeyButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
+submitKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+local submitKeyButtonCorner = Instance.new("UICorner", submitKeyButton)
+submitKeyButtonCorner.CornerRadius = UDim.new(0, 8)
+
+-- Menu Selection Frame
+local selectionFrame = Instance.new("Frame")
+selectionFrame.Name = "SelectionFrame"
+selectionFrame.Parent = screenGui
+selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+selectionFrame.Size = UDim2.new(0, 300, 0, 150)
+selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
+selectionFrame.BorderSizePixel = 0
+selectionFrame.Visible = false
+local selectionFrameCorner = Instance.new("UICorner", selectionFrame)
+selectionFrameCorner.CornerRadius = UDim.new(0, 8)
+
+local selectionTitle = Instance.new("TextLabel")
+selectionTitle.Name = "SelectionTitle"
+selectionTitle.Parent = selectionFrame
+selectionTitle.Size = UDim2.new(1, 0, 0, 30)
+selectionTitle.Text = "Select Menu"
+selectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+selectionTitle.Font = Enum.Font.SourceSansBold
+selectionTitle.TextSize = 18
+selectionTitle.BackgroundTransparency = 1
+
+local freeMenuButton = Instance.new("TextButton")
+freeMenuButton.Name = "FreeMenuButton"
+freeMenuButton.Parent = selectionFrame
+freeMenuButton.Size = UDim2.new(0, 120, 0, 50)
+freeMenuButton.Position = UDim2.new(0.5, -130, 0.5, -25)
+freeMenuButton.Text = "Free Menu"
+freeMenuButton.Font = Enum.Font.SourceSansBold
+freeMenuButton.TextSize = 18
+freeMenuButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
+freeMenuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+local freeMenuButtonCorner = Instance.new("UICorner", freeMenuButton)
+freeMenuButtonCorner.CornerRadius = UDim.new(0, 8)
+
+local premiumMenuButton = Instance.new("TextButton")
+premiumMenuButton.Name = "PremiumMenuButton"
+premiumMenuButton.Parent = selectionFrame
+premiumMenuButton.Size = UDim2.new(0, 120, 0, 50)
+premiumMenuButton.Position = UDim2.new(0.5, 10, 0.5, -25)
+premiumMenuButton.Text = "Premium Menu"
+premiumMenuButton.Font = Enum.Font.SourceSansBold
+premiumMenuButton.TextSize = 18
+premiumMenuButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Gold color for premium
+premiumMenuButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+local premiumMenuButtonCorner = Instance.new("UICorner", premiumMenuButton)
+premiumMenuButtonCorner.CornerRadius = UDim.new(0, 8)
+
+-- Discord Notification
+local discordNotification = Instance.new("Frame")
+discordNotification.Name = "DiscordNotification"
+discordNotification.Parent = screenGui
+discordNotification.AnchorPoint = Vector2.new(0.5, 0)
+discordNotification.Size = UDim2.new(0, 300, 0, 60)
+discordNotification.Position = UDim2.new(0.5, 0, 0, 10) -- Tengah atas
+discordNotification.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
+discordNotification.Visible = false
+local discordCorner = Instance.new("UICorner", discordNotification)
+discordCorner.CornerRadius = UDim.new(0, 8)
+
+local discordTitle = Instance.new("TextLabel")
+discordTitle.Parent = discordNotification
+discordTitle.Size = UDim2.new(1, 0, 0.5, 0)
+discordTitle.Text = "Join our Discord!"
+discordTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+discordTitle.Font = Enum.Font.SourceSansBold
+discordTitle.TextSize = 18
+discordTitle.BackgroundTransparency = 1
+
+local discordLink = Instance.new("TextButton")
+discordLink.Parent = discordNotification
+discordLink.Size = UDim2.new(0, 200, 0, 30)
+discordLink.Position = UDim2.new(0.5, -100, 0.5, 0)
+discordLink.Text = "Click to copy link"
+discordLink.Font = Enum.Font.SourceSans
+discordLink.TextSize = 16
+discordLink.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+discordLink.TextColor3 = Color3.fromRGB(255, 255, 255)
+local discordLinkCorner = Instance.new("UICorner", discordLink)
+discordLinkCorner.CornerRadius = UDim.new(0, 8)
+
+-- Reopen Button (for after minimizing)
+local reopenButton = Instance.new("TextButton")
+reopenButton.Name = "ReopenButton"
+reopenButton.Parent = screenGui
+reopenButton.AnchorPoint = Vector2.new(0.5, 0)
+reopenButton.Size = UDim2.new(0, 150, 0, 50)
+reopenButton.Position = UDim2.new(0.5, 0, 0, 5)
+reopenButton.Text = "Open Menu"
+reopenButton.Font = Enum.Font.SourceSansBold
+reopenButton.TextSize = 16
+reopenButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
+reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+reopenButton.Visible = false
+local reopenButtonCorner = Instance.new("UICorner", reopenButton)
+reopenButtonCorner.CornerRadius = UDim.new(0, 8)
+
+
+--================================================================--
+-- CORE LOGIC & FUNCTIONS
+--================================================================--
+
+local lastActiveFrame = nil
+local correctKey = "WalvyKey"
+
+-- Creates the base structure for a menu window
+function createBaseMenu()
+    local menuFrame = Instance.new("Frame")
+    menuFrame.Name = "MenuFrame"
+    menuFrame.Parent = screenGui
+    menuFrame.Visible = true
+    menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    menuFrame.Size = UDim2.new(0, 600, 0, 500)
+    menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
+    menuFrame.BorderSizePixel = 0
+    menuFrame.Draggable = true
+    menuFrame.Active = true
+    local cornerRadius = Instance.new("UICorner", menuFrame)
+    cornerRadius.CornerRadius = UDim.new(0, 8)
+
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Parent = menuFrame
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
+    titleBar.BorderSizePixel = 0
+    local titleCorner = Instance.new("UICorner", titleBar)
+    titleCorner.CornerRadius = UDim.new(0, 8)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
+    titleLabel.Parent = titleBar
+    titleLabel.Size = UDim2.new(1, -60, 1, 0)
+    titleLabel.Text = "Menu"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 18
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Parent = titleBar
+    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
+    minimizeButton.Position = UDim2.new(1, -60, 0, 0)
+    minimizeButton.Text = "-"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
+    minimizeButton.Font = Enum.Font.SourceSansBold
+    minimizeButton.TextSize = 24
+    local minimizeCorner = Instance.new("UICorner", minimizeButton)
+    minimizeCorner.CornerRadius = UDim.new(0, 8)
+    minimizeButton.MouseButton1Click:Connect(function()
+        menuFrame.Visible = false
+        reopenButton.Visible = true
+    end)
+
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Parent = titleBar
+    closeButton.Size = UDim2.new(0, 30, 1, 0)
+    closeButton.Position = UDim2.new(1, -30, 0, 0)
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    closeButton.Font = Enum.Font.SourceSansBold
+    closeButton.TextSize = 20
+    local closeButtonCorner = Instance.new("UICorner", closeButton)
+    closeButtonCorner.CornerRadius = UDim.new(0, 8)
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    return menuFrame
+end
+
+-- Creates the Free Menu
+function createFreeMenu()
+    local freeMenuFrame = createBaseMenu()
+    freeMenuFrame.Name = "FreeMenuFrame"
+    freeMenuFrame.TitleBar.TitleLabel.Text = "Free Menu"
+
+    -- Menu gratis sengaja dikosongkan sesuai permintaan
+
+    lastActiveFrame = freeMenuFrame
+end
+
+-- Creates the Premium Menu
+function createPremiumMenu()
+    local premiumMenuFrame = createBaseMenu()
+    premiumMenuFrame.Name = "PremiumMenuFrame"
+    premiumMenuFrame.TitleBar.TitleLabel.Text = "Premium Menu"
+
+    -- Menu premium sengaja dikosongkan sesuai permintaan
+
+    lastActiveFrame = premiumMenuFrame
+end
+
+
+--================================================================--
+-- EVENT CONNECTIONS
+--================================================================--
+
+-- Key submission
+submitKeyButton.MouseButton1Click:Connect(function()
+	if keyInput.Text == correctKey then
+		keyFrame:Destroy()
+		selectionFrame.Visible = true
+		discordNotification.Visible = true
+	else
+		keyInput.Text = "Incorrect Key"
+	end
+end)
+
+-- Menu selection
+freeMenuButton.MouseButton1Click:Connect(function()
+	selectionFrame:Destroy()
+	createFreeMenu()
+end)
+
+premiumMenuButton.MouseButton1Click:Connect(function()
+	selectionFrame:Destroy()
+	createPremiumMenu()
+end)
+
+-- Reopen after minimize
+reopenButton.MouseButton1Click:Connect(function()
+    if lastActiveFrame then
+        lastActiveFrame.Visible = true
+    end
+    reopenButton.Visible = false
+end)
+
+-- Discord link click
+discordLink.MouseButton1Click:Connect(function()
+	if setclipboard then
+		setclipboard("https://discord.gg/your-invite-link") -- Ganti dengan tautan Discord Anda
+	end
+	discordNotification:Destroy()
+end)
