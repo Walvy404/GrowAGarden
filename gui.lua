@@ -1,6 +1,6 @@
 -- Membuat ScreenGui untuk menampung semua elemen GUI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "My Gui"
+screenGui.Name = "MyGui"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Frame untuk sistem kunci
@@ -129,22 +129,25 @@ communityLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 communityLabel.Font = Enum.Font.SourceSans
 communityLabel.TextSize = 16
 communityLabel.BackgroundTransparency = 1
-end)
 
 -- Logika untuk minimize/maximize
-local minimized = false
-local originalSize = mainFrame.Size
+-- Fungsi untuk logika minimize/maximize
+local function setupMinimizeLogic(frame)
+	local minimizeButton = frame:FindFirstChild("TitleBar"):FindFirstChild("MinimizeButton")
+	local originalSize = frame.Size
+	local minimized = false
 
-minimizeButton.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	if minimized then
-		mainFrame.Size = UDim2.new(0, 300, 0, 30)
-		minimizeButton.Text = "+"
-	else
-		mainFrame.Size = originalSize
-		minimizeButton.Text = "-"
-	end
-end)
+	minimizeButton.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		if minimized then
+			frame.Size = UDim2.new(0, 300, 0, 30)
+			minimizeButton.Text = "+"
+		else
+			frame.Size = originalSize
+			minimizeButton.Text = "-"
+		end
+	end)
+end
 
 -- Logika sistem kunci
 local correctKey = "WalvyKey"
@@ -214,6 +217,11 @@ premiumMenuFrame.Name = "PremiumMenuFrame"
 premiumMenuFrame.Parent = screenGui
 premiumMenuFrame.Visible = false
 premiumMenuFrame.TitleLabel.Text = "Premium Menu"
+
+-- Terapkan logika minimize ke semua frame menu
+setupMinimizeLogic(mainFrame)
+setupMinimizeLogic(freeMenuFrame)
+setupMinimizeLogic(premiumMenuFrame)
 
 
 submitKeyButton.MouseButton1Click:Connect(function()
