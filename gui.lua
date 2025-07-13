@@ -280,8 +280,6 @@ premiumMenuButtonCorner.Parent = premiumMenuButton
 
 
 -- Terapkan logika minimize ke semua frame menu
-setupMinimizeLogic(mainFrame)
-setupCloseLogic(mainFrame)
 
 function createFreeMenu()
     local freeMenuFrame = mainFrame:Clone()
