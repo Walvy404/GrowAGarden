@@ -65,116 +65,82 @@ local reopenButtonCorner = Instance.new("UICorner")
 reopenButtonCorner.CornerRadius = UDim.new(0, 8)
 reopenButtonCorner.Parent = reopenButton
 
+local function createBaseMenu()
+    local menuFrame = Instance.new("Frame")
+    menuFrame.Name = "MenuFrame"
+    menuFrame.Parent = screenGui
+    menuFrame.Visible = true
+    menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    menuFrame.Size = UDim2.new(0, 600, 0, 500)
+    menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    menuFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    menuFrame.BorderSizePixel = 0
+    menuFrame.Draggable = true
+    menuFrame.Active = true
 
--- Membuat Frame utama sebagai jendela
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Parent = screenGui
-mainFrame.Visible = false -- Sembunyikan pada awalnya
-mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.Size = UDim2.new(0, 600, 0, 500)
-mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-mainFrame.BorderSizePixel = 0
-mainFrame.Draggable = true
-mainFrame.Active = true
+    local cornerRadius = Instance.new("UICorner")
+    cornerRadius.CornerRadius = UDim.new(0, 8)
+    cornerRadius.Parent = menuFrame
 
--- Menambahkan pembulatan sudut pada frame utama
-local cornerRadius = Instance.new("UICorner")
-cornerRadius.CornerRadius = UDim.new(0, 8)
-cornerRadius.Parent = mainFrame
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Parent = menuFrame
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    titleBar.BorderSizePixel = 0
 
--- Membuat bar judul
-local titleBar = Instance.new("Frame")
-titleBar.Name = "TitleBar"
-titleBar.Parent = mainFrame
-titleBar.Size = UDim2.new(1, 0, 0, 30)
-titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-titleBar.BorderSizePixel = 0
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 8)
+    titleCorner.Parent = titleBar
 
--- Menambahkan pembulatan sudut pada bar judul
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 8)
-titleCorner.Parent = titleBar
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
+    titleLabel.Parent = titleBar
+    titleLabel.Size = UDim2.new(1, -60, 1, 0) -- Beri ruang untuk 2 tombol
+    titleLabel.Text = "My GUI"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 18
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
 
--- Membuat judul teks
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Name = "TitleLabel"
-titleLabel.Parent = titleBar
-titleLabel.Size = UDim2.new(1, -30, 1, 0)
-titleLabel.Text = "My GUI"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.Font = Enum.Font.SourceSansBold
-titleLabel.TextSize = 18
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Position = UDim2.new(0, 10, 0, 0)
-
--- Membuat tombol minimize
-local minimizeButton = Instance.new("TextButton")
-minimizeButton.Name = "MinimizeButton"
-minimizeButton.Parent = titleBar
-minimizeButton.Size = UDim2.new(0, 30, 1, 0)
-minimizeButton.Position = UDim2.new(1, -60, 0, 0)
-minimizeButton.Text = "-"
-minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-minimizeButton.Font = Enum.Font.SourceSansBold
-minimizeButton.TextSize = 24
-minimizeButton.BorderSizePixel = 0
-
--- Menambahkan pembulatan sudut pada tombol minimize
-local minimizeCorner = Instance.new("UICorner")
-minimizeCorner.CornerRadius = UDim.new(0, 8)
-minimizeCorner.Parent = minimizeButton
-
--- Efek hover pada tombol minimize
-minimizeButton.MouseEnter:Connect(function()
-	minimizeButton.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-end)
-
-minimizeButton.MouseLeave:Connect(function()
-	minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-end)
-
--- Membuat teks "Walvy Community"
-local communityLabel = Instance.new("TextLabel")
-communityLabel.Name = "CommunityLabel"
-communityLabel.Parent = mainFrame
-communityLabel.Size = UDim2.new(1, 0, 0, 30)
-communityLabel.Position = UDim2.new(0, 0, 0, 40)
-communityLabel.Text = "Walvy Community"
-communityLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-communityLabel.Font = Enum.Font.SourceSans
-communityLabel.TextSize = 16
-communityLabel.BackgroundTransparency = 1
-
--- Tombol silang untuk menutup
-local closeButton = Instance.new("TextButton")
-closeButton.Name = "CloseButton"
-closeButton.Parent = titleBar
-closeButton.Size = UDim2.new(0, 30, 1, 0)
-closeButton.Position = UDim2.new(1, -30, 0, 0)
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-closeButton.Font = Enum.Font.SourceSansBold
-closeButton.TextSize = 20
-closeButton.BorderSizePixel = 0
-local closeButtonCorner = Instance.new("UICorner")
-closeButtonCorner.CornerRadius = UDim.new(0, 8)
-closeButtonCorner.Parent = closeButton
-
--- Logika untuk minimize/maximize
--- Fungsi untuk logika minimize/maximize
-local function setupMinimizeLogic(frame)
-	local minimizeButton = frame:FindFirstChild("TitleBar"):FindFirstChild("MinimizeButton")
-
-	minimizeButton.MouseButton1Click:Connect(function()
-		frame.Visible = false
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Parent = titleBar
+    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
+    minimizeButton.Position = UDim2.new(1, -60, 0, 0)
+    minimizeButton.Text = "-"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    minimizeButton.Font = Enum.Font.SourceSansBold
+    minimizeButton.TextSize = 24
+    local minimizeCorner = Instance.new("UICorner")
+    minimizeCorner.CornerRadius = UDim.new(0, 8)
+    minimizeCorner.Parent = minimizeButton
+    minimizeButton.MouseButton1Click:Connect(function()
+        menuFrame.Visible = false
         reopenButton.Visible = true
-	end)
-end
+    end)
 
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Parent = titleBar
+    closeButton.Size = UDim2.new(0, 30, 1, 0)
+    closeButton.Position = UDim2.new(1, -30, 0, 0)
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    closeButton.Font = Enum.Font.SourceSansBold
+    closeButton.TextSize = 20
+    local closeButtonCorner = Instance.new("UICorner")
+    closeButtonCorner.CornerRadius = UDim.new(0, 8)
+    closeButtonCorner.Parent = closeButton
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    return menuFrame
+end
 
 -- Logika sistem kunci
 -- Frame Pemilihan Menu
@@ -275,11 +241,9 @@ premiumMenuButtonCorner.Parent = premiumMenuButton
 -- Terapkan logika minimize ke semua frame menu
 
 function createFreeMenu()
-    local freeMenuFrame = mainFrame:Clone()
+    local freeMenuFrame = createBaseMenu()
     freeMenuFrame.Name = "FreeMenuFrame"
-    freeMenuFrame.Parent = screenGui
-    freeMenuFrame.Visible = true
-    freeMenuFrame.TitleLabel.Text = "Free Menu"
+    freeMenuFrame.TitleBar.TitleLabel.Text = "Free Menu"
 
     -- Konten untuk Menu Gratis
     local freeFeatureButton = Instance.new("TextButton")
@@ -321,19 +285,13 @@ function createFreeMenu()
             freeToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
         end
     end)
-    setupMinimizeLogic(freeMenuFrame)
-    freeMenuFrame.TitleBar.CloseButton.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
-    end)
     lastActiveFrame = freeMenuFrame
 end
 
 function createPremiumMenu()
-    local premiumMenuFrame = mainFrame:Clone()
+    local premiumMenuFrame = createBaseMenu()
     premiumMenuFrame.Name = "PremiumMenuFrame"
-    premiumMenuFrame.Parent = screenGui
-    premiumMenuFrame.Visible = true
-    premiumMenuFrame.TitleLabel.Text = "Premium Menu"
+    premiumMenuFrame.TitleBar.TitleLabel.Text = "Premium Menu"
 
     -- Konten untuk Menu Premium
     local premiumFeatureButton1 = Instance.new("TextButton")
@@ -388,10 +346,6 @@ function createPremiumMenu()
             premiumToggleButton.Text = "Super Toggle Off"
             premiumToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
         end
-    end)
-    setupMinimizeLogic(premiumMenuFrame)
-    premiumMenuFrame.TitleBar.CloseButton.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
     end)
     lastActiveFrame = premiumMenuFrame
 end
