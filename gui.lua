@@ -131,25 +131,6 @@ communityLabel.Font = Enum.Font.SourceSans
 communityLabel.TextSize = 16
 communityLabel.BackgroundTransparency = 1
 
--- Pegangan untuk resize
-local resizeHandle = Instance.new("TextLabel")
-resizeHandle.Name = "ResizeHandle"
-resizeHandle.Parent = mainFrame
-resizeHandle.Size = UDim2.new(0, 15, 0, 15)
-resizeHandle.Position = UDim2.new(1, -15, 1, -15)
-resizeHandle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-resizeHandle.BorderSizePixel = 0
-resizeHandle.Text = ""
-local resizeHandleCorner = Instance.new("UICorner")
-resizeHandleCorner.CornerRadius = UDim.new(0, 4)
-resizeHandleCorner.Parent = resizeHandle
-
--- Pegangan untuk resize kiri
-local resizeHandleLeft = resizeHandle:Clone()
-resizeHandleLeft.Name = "ResizeHandleLeft"
-resizeHandleLeft.Parent = mainFrame
-resizeHandleLeft.Position = UDim2.new(0, 0, 1, -15)
-
 -- Logika untuk minimize/maximize
 -- Fungsi untuk logika minimize/maximize
 local function setupMinimizeLogic(frame)
@@ -192,48 +173,6 @@ local function setupMinimizeLogic(frame)
 			minimizeButton.Text = "-"
 		end
 	end)
-end
-
-local function setupResizeLogic(frame, handle, direction)
-    local dragging = false
-    local startPos
-    local startSize
-
-    handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            startPos = Vector2.new(input.Position.X, input.Position.Y)
-            startSize = frame.Size
-            frame.Draggable = false
-        end
-    end)
-
-    handle.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-            frame.Draggable = true
-        end
-    end)
-
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local newPos = Vector2.new(input.Position.X, input.Position.Y)
-            local delta = newPos - startPos
-
-            local newSizeX
-            if direction == "right" then
-                newSizeX = startSize.X.Offset + delta.X
-            else -- left
-                newSizeX = startSize.X.Offset - delta.X
-            end
-            local newSizeY = startSize.Y.Offset + delta.Y
-
-            if newSizeX < 400 then newSizeX = 400 end
-            if newSizeY < 300 then newSizeY = 300 end
-
-            frame.Size = UDim2.new(0, newSizeX, 0, newSizeY)
-        end
-    end)
 end
 
 
@@ -335,8 +274,6 @@ premiumMenuButtonCorner.Parent = premiumMenuButton
 
 -- Terapkan logika minimize ke semua frame menu
 setupMinimizeLogic(mainFrame)
-setupResizeLogic(mainFrame, mainFrame.ResizeHandle, "right")
-setupResizeLogic(mainFrame, mainFrame.ResizeHandleLeft, "left")
 
 function createFreeMenu()
     local freeMenuFrame = mainFrame:Clone()
@@ -386,8 +323,6 @@ function createFreeMenu()
         end
     end)
     setupMinimizeLogic(freeMenuFrame)
-    setupResizeLogic(freeMenuFrame, freeMenuFrame.ResizeHandle, "right")
-    setupResizeLogic(freeMenuFrame, freeMenuFrame.ResizeHandleLeft, "left")
 end
 
 function createPremiumMenu()
@@ -452,8 +387,6 @@ function createPremiumMenu()
         end
     end)
     setupMinimizeLogic(premiumMenuFrame)
-    setupResizeLogic(premiumMenuFrame, premiumMenuFrame.ResizeHandle, "right")
-    setupResizeLogic(premiumMenuFrame, premiumMenuFrame.ResizeHandleLeft, "left")
 end
 
 freeMenuButton.MouseButton1Click:Connect(function()
