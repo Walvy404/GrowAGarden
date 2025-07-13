@@ -1,35 +1,47 @@
 --[[
     Script: WalvyXploit GUI with Timed Key System
     Description: A Roblox GUI script featuring a key system that allows access for 8 hours per key activation.
-                 This version includes bug fixes and robustness improvements.
+                 Optimized for broad executor compatibility, including Delta.
     Author: Walvy
-    Version: 1.4 (Bug Fixes & Hardening)
+    Version: 1.5 (Executor Compatibility)
 ]]
 
 --================================================================--
--- Services and Configuration
+-- Environment Compatibility & Polyfills
 --================================================================--
 
+-- Ensure standard services are available
+local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 
--- Configuration Constants
+-- Polyfill for 'tick()' if it's not available in some very old environments.
+-- Most modern executors, including Delta, will have this.
+local _tick = tick or os.time
+
+-- Wrapper for setclipboard to ensure it doesn't error if unavailable.
+local function safeSetClipboard(text)
+    if typeof(setclipboard) == "function" then
+        pcall(setclipboard, text)
+    else
+        warn("WalvyXploit: 'setclipboard' is not available in this environment.")
+    end
+end
+
+--================================================================--
+-- Configuration
+--================================================================--
+
 local CONFIG = {
     CORRECT_KEY = "WalvyKey",
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
-    KEY_VALID_DURATION = 28800, -- 8 hours in seconds (8 * 60 * 60)
-    DATASTORE_NAME = "KeyActivationTimeStore"
+    KEY_VALID_DURATION = 28800, -- 8 hours in seconds
+    DATASTORE_NAME = "WalvyKeyActivationTimeStore" -- More unique name
 }
-
--- DataStore for saving key activation times
-local keyTimeStore = DataStoreService:GetDataStore(CONFIG.DATASTORE_NAME)
 
 --================================================================--
 -- GUI Component Constructors
 --================================================================--
-
--- Forward declaration for the reopen button so other components can access it
-local reopenButton
 
 --- A utility function to create and parent a UICorner.
 local function createCorner(parent, radius)
@@ -38,163 +50,10 @@ local function createCorner(parent, radius)
     corner.Parent = parent
 end
 
---- Creates the Key System window where the player enters their key.
-local function createKeySystem(parent)
-    local keyFrame = Instance.new("Frame")
-    keyFrame.Name = "KeyFrame"
-    keyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    keyFrame.Size = UDim2.new(0, 300, 0, 180)
-    keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    keyFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    keyFrame.Parent = parent
-    createCorner(keyFrame, 8)
-
-    local title = Instance.new("TextLabel")
-    title.Name = "Title"
-    title.Size = UDim2.new(1, 0, 0, 30)
-    title.Text = "Enter Key"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.Font = Enum.Font.SourceSansBold
-    title.TextSize = 18
-    title.BackgroundTransparency = 1
-    title.Parent = keyFrame
-
-    local input = Instance.new("TextBox")
-    input.Name = "Input"
-    input.Size = UDim2.new(0, 260, 0, 40)
-    input.Position = UDim2.new(0.5, -130, 0, 40)
-    input.PlaceholderText = "Your Key"
-    input.Font = Enum.Font.SourceSans
-    input.TextSize = 16
-    input.Parent = keyFrame
-
-    local status = Instance.new("TextLabel")
-    status.Name = "Status"
-    status.Size = UDim2.new(1, -40, 0, 20)
-    status.Position = UDim2.new(0.5, 0, 0, 85)
-    status.AnchorPoint = Vector2.new(0.5, 0)
-    status.Text = ""
-    status.Font = Enum.Font.SourceSans
-    status.TextSize = 14
-    status.TextColor3 = Color3.fromRGB(255, 80, 80)
-    status.BackgroundTransparency = 1
-    status.Parent = keyFrame
-
-    local submit = Instance.new("TextButton")
-    submit.Name = "Submit"
-    submit.Size = UDim2.new(0, 100, 0, 40)
-    submit.Position = UDim2.new(0.5, -50, 0, 115)
-    submit.Text = "Submit"
-    submit.Font = Enum.Font.SourceSansBold
-    submit.TextSize = 18
-    submit.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
-    submit.TextColor3 = Color3.fromRGB(255, 255, 255)
-    submit.Parent = keyFrame
-    createCorner(submit, 8)
-
-    return {
-        frame = keyFrame,
-        input = input,
-        submit = submit,
-        status = status
-    }
-end
-
---- Creates the Menu Selection window.
-local function createMenuSelection(parent)
-    local selectionFrame = Instance.new("Frame")
-    selectionFrame.Name = "SelectionFrame"
-    selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    selectionFrame.Size = UDim2.new(0, 300, 0, 150)
-    selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    selectionFrame.Visible = false
-    selectionFrame.Parent = parent
-    createCorner(selectionFrame, 8)
-
-    local title = Instance.new("TextLabel")
-    title.Name = "Title"
-    title.Size = UDim2.new(1, 0, 0, 30)
-    title.Text = "Select Menu"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.Font = Enum.Font.SourceSansBold
-    title.TextSize = 18
-    title.BackgroundTransparency = 1
-    title.Parent = selectionFrame
-
-    local freeButton = Instance.new("TextButton")
-    freeButton.Name = "FreeButton"
-    freeButton.Size = UDim2.new(0, 120, 0, 50)
-    freeButton.Position = UDim2.new(0.5, -130, 0.5, -25)
-    freeButton.Text = "Free Menu"
-    freeButton.Font = Enum.Font.SourceSansBold
-    freeButton.TextSize = 18
-    freeButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
-    freeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    freeButton.Parent = selectionFrame
-    createCorner(freeButton, 8)
-
-    local premiumButton = Instance.new("TextButton")
-    premiumButton.Name = "PremiumButton"
-    premiumButton.Size = UDim2.new(0, 120, 0, 50)
-    premiumButton.Position = UDim2.new(0.5, 10, 0.5, -25)
-    premiumButton.Text = "Premium Menu"
-    premiumButton.Font = Enum.Font.SourceSansBold
-    premiumButton.TextSize = 18
-    premiumButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-    premiumButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-    premiumButton.Parent = selectionFrame
-    createCorner(premiumButton, 8)
-
-    return {
-        frame = selectionFrame,
-        freeButton = freeButton,
-        premiumButton = premiumButton
-    }
-end
-
---- Creates the Discord Notification banner.
-local function createDiscordBanner(parent)
-    local discordFrame = Instance.new("Frame")
-    discordFrame.Name = "DiscordNotification"
-    discordFrame.AnchorPoint = Vector2.new(0.5, 0)
-    discordFrame.Size = UDim2.new(0, 300, 0, 60)
-    discordFrame.Position = UDim2.new(0.5, 0, 0, 10)
-    discordFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    discordFrame.Visible = false
-    discordFrame.Parent = parent
-    createCorner(discordFrame, 8)
-
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0.5, 0)
-    title.Text = "Join our Discord!"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.Font = Enum.Font.SourceSansBold
-    title.TextSize = 18
-    title.BackgroundTransparency = 1
-    title.Parent = discordFrame
-
-    local link = Instance.new("TextButton")
-    link.Size = UDim2.new(0, 200, 0, 30)
-    link.Position = UDim2.new(0.5, -100, 0.5, 0)
-    link.Text = "Click to copy link"
-    link.Font = Enum.Font.SourceSans
-    link.TextSize = 16
-    link.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-    link.TextColor3 = Color3.fromRGB(255, 255, 255)
-    link.Parent = discordFrame
-    createCorner(link, 8)
-
-    return {
-        frame = discordFrame,
-        link = link
-    }
-end
-
 --- Creates the base structure for a draggable menu window.
-local function createMenuBase(parent, title)
+local function createMenuBase(parent, title, reopenButton)
     local menuFrame = Instance.new("Frame")
-    menuFrame.Name = title:gsub(" ", "") .. "Frame"
+    menuFrame.Name = title:gsub("%s", "") .. "Frame" -- More robust name sanitation
     menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     menuFrame.Size = UDim2.new(0, 600, 0, 500)
     menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -204,6 +63,7 @@ local function createMenuBase(parent, title)
     menuFrame.Parent = parent
     createCorner(menuFrame, 8)
 
+    -- ... (Rest of the menu creation logic is unchanged, just ensure it uses the passed 'reopenButton')
     local titleBar = Instance.new("Frame")
     titleBar.Name = "TitleBar"
     titleBar.Size = UDim2.new(1, 0, 0, 30)
@@ -212,39 +72,16 @@ local function createMenuBase(parent, title)
     createCorner(titleBar, 8)
 
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "TitleLabel"
-    titleLabel.Size = UDim2.new(1, -60, 1, 0)
-    titleLabel.Position = UDim2.new(0, 10, 0, 0)
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.TextSize = 18
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = titleBar
+    -- ... (titleLabel properties)
+    titleLabel.Name = "TitleLabel"; titleLabel.Size = UDim2.new(1, -60, 1, 0); titleLabel.Position = UDim2.new(0, 10, 0, 0); titleLabel.Text = title; titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.SourceSansBold; titleLabel.TextSize = 18; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.Parent = titleBar
 
     local minimize = Instance.new("TextButton")
-    minimize.Name = "MinimizeButton"
-    minimize.Size = UDim2.new(0, 30, 1, 0)
-    minimize.Position = UDim2.new(1, -60, 0, 0)
-    minimize.Text = "—"
-    minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimize.BackgroundColor3 = titleBar.BackgroundColor3
-    minimize.Font = Enum.Font.SourceSansBold
-    minimize.TextSize = 24
-    minimize.Parent = titleBar
-    createCorner(minimize, 8)
+    -- ... (minimize button properties)
+    minimize.Name = "MinimizeButton"; minimize.Size = UDim2.new(0, 30, 1, 0); minimize.Position = UDim2.new(1, -60, 0, 0); minimize.Text = "—"; minimize.TextColor3 = Color3.fromRGB(255, 255, 255); minimize.BackgroundColor3 = titleBar.BackgroundColor3; minimize.Font = Enum.Font.SourceSansBold; minimize.TextSize = 24; minimize.Parent = titleBar; createCorner(minimize, 8)
 
     local close = Instance.new("TextButton")
-    close.Name = "CloseButton"
-    close.Size = UDim2.new(0, 30, 1, 0)
-    close.Position = UDim2.new(1, -30, 0, 0)
-    close.Text = "✕"
-    close.TextColor3 = Color3.fromRGB(255, 255, 255)
-    close.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-    close.Font = Enum.Font.SourceSansBold
-    close.TextSize = 20
-    close.Parent = titleBar
-    createCorner(close, 8)
+    -- ... (close button properties)
+    close.Name = "CloseButton"; close.Size = UDim2.new(0, 30, 1, 0); close.Position = UDim2.new(1, -30, 0, 0); close.Text = "✕"; close.TextColor3 = Color3.fromRGB(255, 255, 255); close.BackgroundColor3 = Color3.fromRGB(180, 0, 0); close.Font = Enum.Font.SourceSansBold; close.TextSize = 20; close.Parent = titleBar; createCorner(close, 8)
 
     minimize.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
@@ -258,8 +95,9 @@ local function createMenuBase(parent, title)
     return menuFrame
 end
 
+
 --================================================================--
--- Application Logic
+-- Main Application
 --================================================================--
 
 local App = {}
@@ -269,73 +107,100 @@ App.screenGui = nil
 function App:Init()
     local localPlayer = Players.LocalPlayer
     if not localPlayer then
-        warn("WalvyXploit: Could not find LocalPlayer.")
+        warn("WalvyXploit: Could not find LocalPlayer. Script will not run.")
         return
     end
 
-    local playerGui = localPlayer:WaitForChild("PlayerGui")
+    -- Using CoreGui is often more reliable in exploit environments
+    local playerGui = CoreGui:FindFirstChild("RobloxGui") or localPlayer:WaitForChild("PlayerGui")
     if not playerGui then
-        warn("WalvyXploit: Could not find PlayerGui.")
+        warn("WalvyXploit: Could not find a valid GUI parent. Script will not run.")
         return
     end
 
     self.screenGui = Instance.new("ScreenGui")
     self.screenGui.Name = "WalvyXploitGui"
+    self.screenGui.ResetOnSpawn = false -- Prevents GUI from being deleted on respawn
     self.screenGui.Parent = playerGui
 
-    local keySystem = createKeySystem(self.screenGui)
-    local menuSelection = createMenuSelection(self.screenGui)
-    local discordBanner = createDiscordBanner(self.screenGui)
+    -- Create all UI components and pass the ScreenGui as the parent
+    local keySystem = self:CreateKeySystem(self.screenGui)
+    local menuSelection = self:CreateMenuSelection(self.screenGui)
+    local discordBanner = self:CreateDiscordBanner(self.screenGui)
+    local reopenButton = self:CreateReopenButton(self.screenGui)
 
-    reopenButton = Instance.new("TextButton")
-    reopenButton.Name = "ReopenButton"
-    reopenButton.AnchorPoint = Vector2.new(0.5, 0)
-    reopenButton.Size = UDim2.new(0, 150, 0, 50)
-    reopenButton.Position = UDim2.new(0.5, 0, 0, 5)
-    reopenButton.Text = "Open Menu"
-    reopenButton.Font = Enum.Font.SourceSansBold
-    reopenButton.TextSize = 16
-    reopenButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
-    reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    reopenButton.Visible = false
-    reopenButton.Parent = self.screenGui
-    createCorner(reopenButton, 8)
-
+    -- Define the main success action
     local function showMainMenu()
         keySystem.frame:Destroy()
         menuSelection.frame.Visible = true
         discordBanner.frame.Visible = true
     end
 
+    -- Connect all events
     keySystem.submit.MouseButton1Click:Connect(function()
         self:OnKeySubmit(localPlayer, keySystem.input.Text, keySystem.status, showMainMenu)
     end)
 
     menuSelection.freeButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
-        self.lastActiveMenu = createMenuBase(self.screenGui, "Free Menu")
+        discordBanner.frame:Destroy()
+        self.lastActiveMenu = createMenuBase(self.screenGui, "Free Menu", reopenButton)
     end)
 
     menuSelection.premiumButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
-        self.lastActiveMenu = createMenuBase(self.screenGui, "Premium Menu")
+        discordBanner.frame:Destroy()
+        self.lastActiveMenu = createMenuBase(self.screenGui, "Premium Menu", reopenButton)
     end)
 
     discordBanner.link.MouseButton1Click:Connect(function()
-        if typeof(setclipboard) == "function" then
-            setclipboard(CONFIG.DISCORD_INVITE_LINK)
-        end
+        safeSetClipboard(CONFIG.DISCORD_INVITE_LINK)
         discordBanner.frame:Destroy()
     end)
 
     reopenButton.MouseButton1Click:Connect(function()
-        if self.lastActiveMenu then
+        if self.lastActiveMenu and self.lastActiveMenu.Parent then
             self.lastActiveMenu.Visible = true
         end
         reopenButton.Visible = false
     end)
 
+    -- Run the initial key check
     self:CheckForExistingKeySession(localPlayer, showMainMenu)
+end
+
+-- Moved component creation into the App table for better organization
+function App:CreateKeySystem(parent)
+    -- ... (logic from createKeySystem, returns a table of its components)
+    local keyFrame = Instance.new("Frame"); keyFrame.Name = "KeyFrame"; keyFrame.AnchorPoint = Vector2.new(0.5, 0.5); keyFrame.Size = UDim2.new(0, 300, 0, 180); keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0); keyFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); keyFrame.Parent = parent; createCorner(keyFrame, 8)
+    local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Enter Key"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = keyFrame
+    local input = Instance.new("TextBox"); input.Name = "Input"; input.Size = UDim2.new(0, 260, 0, 40); input.Position = UDim2.new(0.5, -130, 0, 40); input.PlaceholderText = "Your Key"; input.Font = Enum.Font.SourceSans; input.TextSize = 16; input.Parent = keyFrame
+    local status = Instance.new("TextLabel"); status.Name = "Status"; status.Size = UDim2.new(1, -40, 0, 20); status.Position = UDim2.new(0.5, 0, 0, 85); status.AnchorPoint = Vector2.new(0.5, 0); status.Text = ""; status.Font = Enum.Font.SourceSans; status.TextSize = 14; status.TextColor3 = Color3.fromRGB(255, 80, 80); status.BackgroundTransparency = 1; status.Parent = keyFrame
+    local submit = Instance.new("TextButton"); submit.Name = "Submit"; submit.Size = UDim2.new(0, 100, 0, 40); submit.Position = UDim2.new(0.5, -50, 0, 115); submit.Text = "Submit"; submit.Font = Enum.Font.SourceSansBold; submit.TextSize = 18; submit.BackgroundColor3 = Color3.fromRGB(50, 58, 82); submit.TextColor3 = Color3.fromRGB(255, 255, 255); submit.Parent = keyFrame; createCorner(submit, 8)
+    return { frame = keyFrame, input = input, submit = submit, status = status }
+end
+
+function App:CreateMenuSelection(parent)
+    -- ... (logic from createMenuSelection)
+    local selectionFrame = Instance.new("Frame"); selectionFrame.Name = "SelectionFrame"; selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5); selectionFrame.Size = UDim2.new(0, 300, 0, 150); selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0); selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); selectionFrame.Visible = false; selectionFrame.Parent = parent; createCorner(selectionFrame, 8)
+    local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Select Menu"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = selectionFrame
+    local freeButton = Instance.new("TextButton"); freeButton.Name = "FreeButton"; freeButton.Size = UDim2.new(0, 120, 0, 50); freeButton.Position = UDim2.new(0.5, -130, 0.5, -25); freeButton.Text = "Free Menu"; freeButton.Font = Enum.Font.SourceSansBold; freeButton.TextSize = 18; freeButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82); freeButton.TextColor3 = Color3.fromRGB(255, 255, 255); freeButton.Parent = selectionFrame; createCorner(freeButton, 8)
+    local premiumButton = Instance.new("TextButton"); premiumButton.Name = "PremiumButton"; premiumButton.Size = UDim2.new(0, 120, 0, 50); premiumButton.Position = UDim2.new(0.5, 10, 0.5, -25); premiumButton.Text = "Premium Menu"; premiumButton.Font = Enum.Font.SourceSansBold; premiumButton.TextSize = 18; premiumButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0); premiumButton.TextColor3 = Color3.fromRGB(0, 0, 0); premiumButton.Parent = selectionFrame; createCorner(premiumButton, 8)
+    return { frame = selectionFrame, freeButton = freeButton, premiumButton = premiumButton }
+end
+
+function App:CreateDiscordBanner(parent)
+    -- ... (logic from createDiscordBanner)
+    local discordFrame = Instance.new("Frame"); discordFrame.Name = "DiscordNotification"; discordFrame.AnchorPoint = Vector2.new(0.5, 0); discordFrame.Size = UDim2.new(0, 300, 0, 60); discordFrame.Position = UDim2.new(0.5, 0, 0, 10); discordFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); discordFrame.Visible = false; discordFrame.Parent = parent; createCorner(discordFrame, 8)
+    local title = Instance.new("TextLabel"); title.Size = UDim2.new(1, 0, 0.5, 0); title.Text = "Join our Discord!"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = discordFrame
+    local link = Instance.new("TextButton"); link.Size = UDim2.new(0, 200, 0, 30); link.Position = UDim2.new(0.5, -100, 0.5, 0); link.Text = "Click to copy link"; link.Font = Enum.Font.SourceSans; link.TextSize = 16; link.BackgroundColor3 = Color3.fromRGB(88, 101, 242); link.TextColor3 = Color3.fromRGB(255, 255, 255); link.Parent = discordFrame; createCorner(link, 8)
+    return { frame = discordFrame, link = link }
+end
+
+function App:CreateReopenButton(parent)
+    local reopenBtn = Instance.new("TextButton")
+    reopenBtn.Name = "ReopenButton"; reopenBtn.AnchorPoint = Vector2.new(0.5, 0); reopenBtn.Size = UDim2.new(0, 150, 0, 50); reopenBtn.Position = UDim2.new(0.5, 0, 0, 5); reopenBtn.Text = "Open Menu"; reopenBtn.Font = Enum.Font.SourceSansBold; reopenBtn.TextSize = 16; reopenBtn.BackgroundColor3 = Color3.fromRGB(50, 58, 82); reopenBtn.TextColor3 = Color3.fromRGB(255, 255, 255); reopenBtn.Visible = false; reopenBtn.Parent = parent; createCorner(reopenBtn, 8)
+    return reopenBtn
 end
 
 function App:OnKeySubmit(player, key, statusLabel, successCallback)
@@ -355,7 +220,7 @@ function App:OnKeySubmit(player, key, statusLabel, successCallback)
         return
     end
 
-    local currentTime = tick()
+    local currentTime = _tick()
     if activationTime and (currentTime - activationTime < CONFIG.KEY_VALID_DURATION) then
         statusLabel.Text = "Key session active. Opening menu..."
         task.wait(1)
@@ -380,12 +245,10 @@ function App:CheckForExistingKeySession(player, successCallback)
     end)
 
     if success and activationTime then
-        if (tick() - activationTime) < CONFIG.KEY_VALID_DURATION then
+        if (_tick() - activationTime) < CONFIG.KEY_VALID_DURATION then
             successCallback()
         else
-            pcall(function()
-                keyTimeStore:RemoveAsync(player.UserId .. "_" .. CONFIG.CORRECT_KEY)
-            end)
+            pcall(function() keyTimeStore:RemoveAsync(player.UserId .. "_" .. CONFIG.CORRECT_KEY) end)
         end
     end
 end
@@ -394,5 +257,8 @@ end
 -- Script Entry Point
 --================================================================--
 
-App:Init()
-print("WalvyXploit GUI Loaded (v1.4).")
+-- Run the entire script in a protected call to prevent it from breaking other scripts.
+pcall(function()
+    App:Init()
+    print("WalvyXploit GUI Loaded (v1.5).")
+end)
