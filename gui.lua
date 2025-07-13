@@ -1,9 +1,19 @@
--- Membuat ScreenGui untuk menampung semua elemen GUI
+--[[
+    Script: Walvy Community GUI
+    Description: A versatile GUI script with a key system, free/premium menus, and dynamic UI creation.
+    Features: Draggable, Minimizable, Closable, Color Themed.
+]]
+
+--================================================================--
+-- GUI ELEMENTS
+--================================================================--
+
+-- Main ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "MyGui"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Frame untuk sistem kunci
+-- Key System Frame
 local keyFrame = Instance.new("Frame")
 keyFrame.Name = "KeyFrame"
 keyFrame.Parent = screenGui
@@ -12,9 +22,8 @@ keyFrame.Size = UDim2.new(0, 300, 0, 150)
 keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 keyFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
 keyFrame.BorderSizePixel = 0
-local keyFrameCorner = Instance.new("UICorner")
+local keyFrameCorner = Instance.new("UICorner", keyFrame)
 keyFrameCorner.CornerRadius = UDim.new(0, 8)
-keyFrameCorner.Parent = keyFrame
 
 local keyTitle = Instance.new("TextLabel")
 keyTitle.Name = "KeyTitle"
@@ -45,105 +54,10 @@ submitKeyButton.Font = Enum.Font.SourceSansBold
 submitKeyButton.TextSize = 18
 submitKeyButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
 submitKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-local submitKeyButtonCorner = Instance.new("UICorner")
+local submitKeyButtonCorner = Instance.new("UICorner", submitKeyButton)
 submitKeyButtonCorner.CornerRadius = UDim.new(0, 8)
-submitKeyButtonCorner.Parent = submitKeyButton
 
--- Tombol untuk membuka kembali setelah minimize
-local reopenButton = Instance.new("TextButton")
-reopenButton.Name = "ReopenButton"
-reopenButton.Parent = screenGui
-reopenButton.Size = UDim2.new(0, 100, 0, 40)
-reopenButton.Position = UDim2.new(1, -110, 0, 10)
-reopenButton.Text = "Open Menu"
-reopenButton.Font = Enum.Font.SourceSansBold
-reopenButton.TextSize = 16
-reopenButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-reopenButton.Visible = false
-local reopenButtonCorner = Instance.new("UICorner")
-reopenButtonCorner.CornerRadius = UDim.new(0, 8)
-reopenButtonCorner.Parent = reopenButton
-
-local function createBaseMenu()
-    local menuFrame = Instance.new("Frame")
-    menuFrame.Name = "MenuFrame"
-    menuFrame.Parent = screenGui
-    menuFrame.Visible = true
-    menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    menuFrame.Size = UDim2.new(0, 600, 0, 500)
-    menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    menuFrame.BorderSizePixel = 0
-    menuFrame.Draggable = true
-    menuFrame.Active = true
-
-    local cornerRadius = Instance.new("UICorner")
-    cornerRadius.CornerRadius = UDim.new(0, 8)
-    cornerRadius.Parent = menuFrame
-
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Parent = menuFrame
-    titleBar.Size = UDim2.new(1, 0, 0, 30)
-    titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
-    titleBar.BorderSizePixel = 0
-
-    local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, 8)
-    titleCorner.Parent = titleBar
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "TitleLabel"
-    titleLabel.Parent = titleBar
-    titleLabel.Size = UDim2.new(1, -60, 1, 0) -- Beri ruang untuk 2 tombol
-    titleLabel.Text = "My GUI"
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.TextSize = 18
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Position = UDim2.new(0, 10, 0, 0)
-
-    local minimizeButton = Instance.new("TextButton")
-    minimizeButton.Name = "MinimizeButton"
-    minimizeButton.Parent = titleBar
-    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
-    minimizeButton.Position = UDim2.new(1, -60, 0, 0)
-    minimizeButton.Text = "-"
-    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
-    minimizeButton.Font = Enum.Font.SourceSansBold
-    minimizeButton.TextSize = 24
-    local minimizeCorner = Instance.new("UICorner")
-    minimizeCorner.CornerRadius = UDim.new(0, 8)
-    minimizeCorner.Parent = minimizeButton
-    minimizeButton.MouseButton1Click:Connect(function()
-        menuFrame.Visible = false
-        reopenButton.Visible = true
-    end)
-
-    local closeButton = Instance.new("TextButton")
-    closeButton.Name = "CloseButton"
-    closeButton.Parent = titleBar
-    closeButton.Size = UDim2.new(0, 30, 1, 0)
-    closeButton.Position = UDim2.new(1, -30, 0, 0)
-    closeButton.Text = "X"
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-    closeButton.Font = Enum.Font.SourceSansBold
-    closeButton.TextSize = 20
-    local closeButtonCorner = Instance.new("UICorner")
-    closeButtonCorner.CornerRadius = UDim.new(0, 8)
-    closeButtonCorner.Parent = closeButton
-    closeButton.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
-    end)
-
-    return menuFrame
-end
-
--- Logika sistem kunci
--- Frame Pemilihan Menu
+-- Menu Selection Frame
 local selectionFrame = Instance.new("Frame")
 selectionFrame.Name = "SelectionFrame"
 selectionFrame.Parent = screenGui
@@ -153,51 +67,8 @@ selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
 selectionFrame.BorderSizePixel = 0
 selectionFrame.Visible = false
-local selectionFrameCorner = Instance.new("UICorner")
+local selectionFrameCorner = Instance.new("UICorner", selectionFrame)
 selectionFrameCorner.CornerRadius = UDim.new(0, 8)
-selectionFrameCorner.Parent = selectionFrame
-
--- Notifikasi Discord
-local discordNotification = Instance.new("Frame")
-discordNotification.Name = "DiscordNotification"
-discordNotification.Parent = screenGui
-discordNotification.AnchorPoint = Vector2.new(0.5, 0)
-discordNotification.Size = UDim2.new(0, 300, 0, 60)
-discordNotification.Position = UDim2.new(0.5, 0, 0, 10) -- Tengah atas
-discordNotification.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-discordNotification.Visible = false
-local discordCorner = Instance.new("UICorner")
-discordCorner.CornerRadius = UDim.new(0, 8)
-discordCorner.Parent = discordNotification
-
-local discordTitle = Instance.new("TextLabel")
-discordTitle.Parent = discordNotification
-discordTitle.Size = UDim2.new(1, 0, 0.5, 0)
-discordTitle.Text = "Join our Discord!"
-discordTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-discordTitle.Font = Enum.Font.SourceSansBold
-discordTitle.TextSize = 18
-discordTitle.BackgroundTransparency = 1
-
-local discordLink = Instance.new("TextButton")
-discordLink.Parent = discordNotification
-discordLink.Size = UDim2.new(0, 200, 0, 30)
-discordLink.Position = UDim2.new(0.5, -100, 0.5, 0)
-discordLink.Text = "Click to copy link"
-discordLink.Font = Enum.Font.SourceSans
-discordLink.TextSize = 16
-discordLink.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-discordLink.TextColor3 = Color3.fromRGB(255, 255, 255)
-local discordLinkCorner = Instance.new("UICorner")
-discordLinkCorner.CornerRadius = UDim.new(0, 8)
-discordLinkCorner.Parent = discordLink
-
-discordLink.MouseButton1Click:Connect(function()
-	if setclipboard then
-		setclipboard("https://discord.gg/your-invite-link") -- Ganti dengan tautan Discord Anda
-	end
-	discordNotification:Destroy()
-end)
 
 local selectionTitle = Instance.new("TextLabel")
 selectionTitle.Name = "SelectionTitle"
@@ -219,9 +90,8 @@ freeMenuButton.Font = Enum.Font.SourceSansBold
 freeMenuButton.TextSize = 18
 freeMenuButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
 freeMenuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-local freeMenuButtonCorner = Instance.new("UICorner")
+local freeMenuButtonCorner = Instance.new("UICorner", freeMenuButton)
 freeMenuButtonCorner.CornerRadius = UDim.new(0, 8)
-freeMenuButtonCorner.Parent = freeMenuButton
 
 local premiumMenuButton = Instance.new("TextButton")
 premiumMenuButton.Name = "PremiumMenuButton"
@@ -233,19 +103,143 @@ premiumMenuButton.Font = Enum.Font.SourceSansBold
 premiumMenuButton.TextSize = 18
 premiumMenuButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Gold color for premium
 premiumMenuButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-local premiumMenuButtonCorner = Instance.new("UICorner")
+local premiumMenuButtonCorner = Instance.new("UICorner", premiumMenuButton)
 premiumMenuButtonCorner.CornerRadius = UDim.new(0, 8)
-premiumMenuButtonCorner.Parent = premiumMenuButton
+
+-- Discord Notification
+local discordNotification = Instance.new("Frame")
+discordNotification.Name = "DiscordNotification"
+discordNotification.Parent = screenGui
+discordNotification.AnchorPoint = Vector2.new(0.5, 0)
+discordNotification.Size = UDim2.new(0, 300, 0, 60)
+discordNotification.Position = UDim2.new(0.5, 0, 0, 10) -- Tengah atas
+discordNotification.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
+discordNotification.Visible = false
+local discordCorner = Instance.new("UICorner", discordNotification)
+discordCorner.CornerRadius = UDim.new(0, 8)
+
+local discordTitle = Instance.new("TextLabel")
+discordTitle.Parent = discordNotification
+discordTitle.Size = UDim2.new(1, 0, 0.5, 0)
+discordTitle.Text = "Join our Discord!"
+discordTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+discordTitle.Font = Enum.Font.SourceSansBold
+discordTitle.TextSize = 18
+discordTitle.BackgroundTransparency = 1
+
+local discordLink = Instance.new("TextButton")
+discordLink.Parent = discordNotification
+discordLink.Size = UDim2.new(0, 200, 0, 30)
+discordLink.Position = UDim2.new(0.5, -100, 0.5, 0)
+discordLink.Text = "Click to copy link"
+discordLink.Font = Enum.Font.SourceSans
+discordLink.TextSize = 16
+discordLink.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+discordLink.TextColor3 = Color3.fromRGB(255, 255, 255)
+local discordLinkCorner = Instance.new("UICorner", discordLink)
+discordLinkCorner.CornerRadius = UDim.new(0, 8)
+
+-- Reopen Button (for after minimizing)
+local reopenButton = Instance.new("TextButton")
+reopenButton.Name = "ReopenButton"
+reopenButton.Parent = screenGui
+reopenButton.Size = UDim2.new(0, 100, 0, 40)
+reopenButton.Position = UDim2.new(1, -110, 0, 10)
+reopenButton.Text = "Open Menu"
+reopenButton.Font = Enum.Font.SourceSansBold
+reopenButton.TextSize = 16
+reopenButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
+reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+reopenButton.Visible = false
+local reopenButtonCorner = Instance.new("UICorner", reopenButton)
+reopenButtonCorner.CornerRadius = UDim.new(0, 8)
 
 
--- Terapkan logika minimize ke semua frame menu
+--================================================================--
+-- CORE LOGIC & FUNCTIONS
+--================================================================--
 
+local lastActiveFrame = nil
+local correctKey = "WalvyKey"
+
+-- Creates the base structure for a menu window
+function createBaseMenu()
+    local menuFrame = Instance.new("Frame")
+    menuFrame.Name = "MenuFrame"
+    menuFrame.Parent = screenGui
+    menuFrame.Visible = true
+    menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    menuFrame.Size = UDim2.new(0, 600, 0, 500)
+    menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
+    menuFrame.BorderSizePixel = 0
+    menuFrame.Draggable = true
+    menuFrame.Active = true
+    local cornerRadius = Instance.new("UICorner", menuFrame)
+    cornerRadius.CornerRadius = UDim.new(0, 8)
+
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Parent = menuFrame
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
+    titleBar.BorderSizePixel = 0
+    local titleCorner = Instance.new("UICorner", titleBar)
+    titleCorner.CornerRadius = UDim.new(0, 8)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
+    titleLabel.Parent = titleBar
+    titleLabel.Size = UDim2.new(1, -60, 1, 0)
+    titleLabel.Text = "Walvy Community"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 18
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Parent = titleBar
+    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
+    minimizeButton.Position = UDim2.new(1, -60, 0, 0)
+    minimizeButton.Text = "-"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
+    minimizeButton.Font = Enum.Font.SourceSansBold
+    minimizeButton.TextSize = 24
+    local minimizeCorner = Instance.new("UICorner", minimizeButton)
+    minimizeCorner.CornerRadius = UDim.new(0, 8)
+    minimizeButton.MouseButton1Click:Connect(function()
+        menuFrame.Visible = false
+        reopenButton.Visible = true
+    end)
+
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Parent = titleBar
+    closeButton.Size = UDim2.new(0, 30, 1, 0)
+    closeButton.Position = UDim2.new(1, -30, 0, 0)
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    closeButton.Font = Enum.Font.SourceSansBold
+    closeButton.TextSize = 20
+    local closeButtonCorner = Instance.new("UICorner", closeButton)
+    closeButtonCorner.CornerRadius = UDim.new(0, 8)
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    return menuFrame
+end
+
+-- Creates the Free Menu
 function createFreeMenu()
     local freeMenuFrame = createBaseMenu()
     freeMenuFrame.Name = "FreeMenuFrame"
     freeMenuFrame.TitleBar.TitleLabel.Text = "Free Menu"
 
-    -- Konten untuk Menu Gratis
     local freeFeatureButton = Instance.new("TextButton")
     freeFeatureButton.Name = "FreeFeatureButton"
     freeFeatureButton.Parent = freeMenuFrame
@@ -256,9 +250,8 @@ function createFreeMenu()
     freeFeatureButton.TextSize = 16
     freeFeatureButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82)
     freeFeatureButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    local freeFeatureButtonCorner = Instance.new("UICorner")
+    local freeFeatureButtonCorner = Instance.new("UICorner", freeFeatureButton)
     freeFeatureButtonCorner.CornerRadius = UDim.new(0, 8)
-    freeFeatureButtonCorner.Parent = freeFeatureButton
 
     local freeToggleButton = Instance.new("TextButton")
     freeToggleButton.Name = "FreeToggleButton"
@@ -268,18 +261,17 @@ function createFreeMenu()
     freeToggleButton.Text = "Toggle Off"
     freeToggleButton.Font = Enum.Font.SourceSans
     freeToggleButton.TextSize = 16
-    freeToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0) -- Merah untuk status Off
+    freeToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
     freeToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    local freeToggleButtonCorner = Instance.new("UICorner")
+    local freeToggleButtonCorner = Instance.new("UICorner", freeToggleButton)
     freeToggleButtonCorner.CornerRadius = UDim.new(0, 8)
-    freeToggleButtonCorner.Parent = freeToggleButton
 
     local isToggled = false
     freeToggleButton.MouseButton1Click:Connect(function()
         isToggled = not isToggled
         if isToggled then
             freeToggleButton.Text = "Toggle On"
-            freeToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0) -- Hijau untuk status On
+            freeToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
         else
             freeToggleButton.Text = "Toggle Off"
             freeToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
@@ -288,12 +280,12 @@ function createFreeMenu()
     lastActiveFrame = freeMenuFrame
 end
 
+-- Creates the Premium Menu
 function createPremiumMenu()
     local premiumMenuFrame = createBaseMenu()
     premiumMenuFrame.Name = "PremiumMenuFrame"
     premiumMenuFrame.TitleBar.TitleLabel.Text = "Premium Menu"
 
-    -- Konten untuk Menu Premium
     local premiumFeatureButton1 = Instance.new("TextButton")
     premiumFeatureButton1.Name = "PremiumFeatureButton1"
     premiumFeatureButton1.Parent = premiumMenuFrame
@@ -304,9 +296,8 @@ function createPremiumMenu()
     premiumFeatureButton1.TextSize = 16
     premiumFeatureButton1.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
     premiumFeatureButton1.TextColor3 = Color3.fromRGB(0, 0, 0)
-    local premiumFeatureButton1Corner = Instance.new("UICorner")
+    local premiumFeatureButton1Corner = Instance.new("UICorner", premiumFeatureButton1)
     premiumFeatureButton1Corner.CornerRadius = UDim.new(0, 8)
-    premiumFeatureButton1Corner.Parent = premiumFeatureButton1
 
     local premiumFeatureButton2 = Instance.new("TextButton")
     premiumFeatureButton2.Name = "PremiumFeatureButton2"
@@ -318,9 +309,8 @@ function createPremiumMenu()
     premiumFeatureButton2.TextSize = 16
     premiumFeatureButton2.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
     premiumFeatureButton2.TextColor3 = Color3.fromRGB(0, 0, 0)
-    local premiumFeatureButton2Corner = Instance.new("UICorner")
+    local premiumFeatureButton2Corner = Instance.new("UICorner", premiumFeatureButton2)
     premiumFeatureButton2Corner.CornerRadius = UDim.new(0, 8)
-    premiumFeatureButton2Corner.Parent = premiumFeatureButton2
 
     local premiumToggleButton = Instance.new("TextButton")
     premiumToggleButton.Name = "PremiumToggleButton"
@@ -332,9 +322,8 @@ function createPremiumMenu()
     premiumToggleButton.TextSize = 16
     premiumToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
     premiumToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    local premiumToggleButtonCorner = Instance.new("UICorner")
+    local premiumToggleButtonCorner = Instance.new("UICorner", premiumToggleButton)
     premiumToggleButtonCorner.CornerRadius = UDim.new(0, 8)
-    premiumToggleButtonCorner.Parent = premiumToggleButton
 
     local isPremiumToggled = false
     premiumToggleButton.MouseButton1Click:Connect(function()
@@ -350,18 +339,12 @@ function createPremiumMenu()
     lastActiveFrame = premiumMenuFrame
 end
 
-freeMenuButton.MouseButton1Click:Connect(function()
-	selectionFrame:Destroy()
-	createFreeMenu()
-end)
 
-premiumMenuButton.MouseButton1Click:Connect(function()
-	selectionFrame:Destroy()
-	createPremiumMenu()
-end)
+--================================================================--
+-- EVENT CONNECTIONS
+--================================================================--
 
-local correctKey = "WalvyKey" -- Kunci Anda di sini
-
+-- Key submission
 submitKeyButton.MouseButton1Click:Connect(function()
 	if keyInput.Text == correctKey then
 		keyFrame:Destroy()
@@ -372,11 +355,29 @@ submitKeyButton.MouseButton1Click:Connect(function()
 	end
 end)
 
-local lastActiveFrame = nil
+-- Menu selection
+freeMenuButton.MouseButton1Click:Connect(function()
+	selectionFrame:Destroy()
+	createFreeMenu()
+end)
 
+premiumMenuButton.MouseButton1Click:Connect(function()
+	selectionFrame:Destroy()
+	createPremiumMenu()
+end)
+
+-- Reopen after minimize
 reopenButton.MouseButton1Click:Connect(function()
     if lastActiveFrame then
         lastActiveFrame.Visible = true
     end
     reopenButton.Visible = false
+end)
+
+-- Discord link click
+discordLink.MouseButton1Click:Connect(function()
+	if setclipboard then
+		setclipboard("https://discord.gg/your-invite-link") -- Ganti dengan tautan Discord Anda
+	end
+	discordNotification:Destroy()
 end)
