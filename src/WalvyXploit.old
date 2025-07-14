@@ -1,8 +1,8 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.4 (Re-implementation of Draggable Reopen Button)
+    Version: 3.5 (Simple Center Reopen Button)
     Author: Walvy
-    Description: A modular GUI script with a draggable image-based button to reopen the menu.
+    Description: A modular GUI script with a simple, centered image button to reopen the menu.
 ]]
 
 --================================================================--
@@ -71,7 +71,7 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.4).")
+    print("WalvyXploit GUI Loaded (v3.5).")
     return self
 end
 
@@ -82,13 +82,6 @@ function App:_setupUI()
 
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
-
-    local function openMenuFromButton()
-        if self.lastActiveMenu and self.lastActiveMenu.Parent then
-            self.lastActiveMenu.Visible = true
-        end
-        self.reopenButton.Visible = false
-    end
 
     -- Connect Events
     menuSelection.freeButton.MouseButton1Click:Connect(function()
@@ -108,46 +101,11 @@ function App:_setupUI()
         discordBanner.frame:Destroy()
     end)
 
-    self:_setupDraggableButton(self.reopenButton, openMenuFromButton)
-end
-
-function App:_setupDraggableButton(button, onClick)
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
-    local dragThreshold = 5
-
-    button.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = button.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
+    self.reopenButton.MouseButton1Click:Connect(function()
+        if self.lastActiveMenu and self.lastActiveMenu.Parent then
+            self.lastActiveMenu.Visible = true
         end
-    end)
-
-    button.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
-            button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    button.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if dragStart then
-                local dragDistance = (input.Position - dragStart).Magnitude
-                if dragDistance < dragThreshold then
-                    onClick()
-                end
-            end
-            dragging = false
-        end
+        self.reopenButton.Visible = false
     end)
 end
 
@@ -170,16 +128,22 @@ function App:_createDiscordBanner()
     return {frame = discordFrame, link = link}
 end
 
+--- Creates a simple, centered button to reopen a minimized menu.
 function App:_createReopenButton()
     local reopenBtn = Instance.new("ImageButton")
     reopenBtn.Name = "ReopenButton"
-    reopenBtn.Size = UDim2.new(0, 60, 0, 60)
-    reopenBtn.Position = UDim2.new(0, 20, 0, 20)
-    reopenBtn.AnchorPoint = Vector2.new(0, 0)
+    reopenBtn.Size = UDim2.new(0, 80, 0, 80) -- A larger, more clickable size
+    reopenBtn.AnchorPoint = Vector2.new(0.5, 0.5) -- Anchor to the center
+    reopenBtn.Position = UDim2.new(0.5, 0, 0.5, 0) -- Position in the center
     reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
     reopenBtn.BackgroundTransparency = 1
     reopenBtn.Visible = false
     reopenBtn.Parent = self.screenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12) -- Slightly rounded corners
+    corner.Parent = reopenBtn
+
     return reopenBtn
 end
 
