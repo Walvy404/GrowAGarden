@@ -1,8 +1,9 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.1 (Draggable Image Button)
+    Version: 3.2 (Menu Open Fix)
     Author: Walvy
     Description: A modular GUI script with a draggable image-based button to reopen the menu.
+                 This version fixes an issue where the reopen button would not show the menu.
 ]]
 
 --================================================================--
@@ -10,7 +11,6 @@
 --================================================================--
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 
 --================================================================--
 -- Configuration
@@ -19,7 +19,7 @@ local UserInputService = game:GetService("UserInputService")
 local CONFIG = {
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
     GUI_NAME = "WalvyXploitGui",
-    REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672" -- Your Image ID
+    REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672"
 }
 
 --================================================================--
@@ -51,6 +51,7 @@ function App.new()
     local self = setmetatable({}, App)
 
     self.lastActiveMenu = nil
+    self.reopenButton = nil -- Will be initialized later
     self.localPlayer = Players.LocalPlayer
 
     if not self.localPlayer then
@@ -71,14 +72,14 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.1).")
+    print("WalvyXploit GUI Loaded (v3.2).")
     return self
 end
 
 function App:_setupUI()
     local menuSelection = self:_createMenuSelection()
     local discordBanner = self:_createDiscordBanner()
-    local reopenButton = self:_createReopenButton()
+    self.reopenButton = self:_createReopenButton() -- Assign to self
 
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
@@ -87,20 +88,20 @@ function App:_setupUI()
         if self.lastActiveMenu and self.lastActiveMenu.Parent then
             self.lastActiveMenu.Visible = true
         end
-        reopenButton.Visible = false
+        self.reopenButton.Visible = false
     end
 
     -- Connect Events
     menuSelection.freeButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
-        self.lastActiveMenu = self:_createMenuBase("Free Menu", reopenButton)
+        self.lastActiveMenu = self:_createMenuBase("Free Menu")
     end)
 
     menuSelection.premiumButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
-        self.lastActiveMenu = self:_createMenuBase("Premium Menu", reopenButton)
+        self.lastActiveMenu = self:_createMenuBase("Premium Menu")
     end)
 
     discordBanner.link.MouseButton1Click:Connect(function()
@@ -108,18 +109,14 @@ function App:_setupUI()
         discordBanner.frame:Destroy()
     end)
 
-    -- Reopen button logic is now split into drag and click
-    self:_setupDraggableButton(reopenButton, openMenuFromButton)
+    self:_setupDraggableButton(self.reopenButton, openMenuFromButton)
 end
 
---- Sets up the dragging and click logic for the reopen button.
--- @param button ImageButton | The button to make draggable.
--- @param onClick function | The function to call when the button is clicked (not dragged).
 function App:_setupDraggableButton(button, onClick)
     local dragging = false
     local dragStart = nil
     local startPos = nil
-    local dragThreshold = 5 -- Pixels the mouse must move before it's considered a drag
+    local dragThreshold = 5
 
     button.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -127,7 +124,6 @@ function App:_setupDraggableButton(button, onClick)
             dragStart = input.Position
             startPos = button.Position
 
-            -- Prevent Roblox's default UI drag behavior
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -145,16 +141,16 @@ function App:_setupDraggableButton(button, onClick)
 
     button.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            local dragDistance = (input.Position - dragStart).Magnitude
-            if dragDistance < dragThreshold then
-                -- If it moved less than the threshold, it's a click
-                onClick()
+            if dragStart then
+                local dragDistance = (input.Position - dragStart).Magnitude
+                if dragDistance < dragThreshold then
+                    onClick()
+                end
             end
             dragging = false
         end
     end)
 end
-
 
 --================================================================--
 -- GUI Component Creation Methods
@@ -175,13 +171,12 @@ function App:_createDiscordBanner()
     return {frame = discordFrame, link = link}
 end
 
---- Creates the button to reopen a minimized menu.
 function App:_createReopenButton()
     local reopenBtn = Instance.new("ImageButton")
     reopenBtn.Name = "ReopenButton"
-    reopenBtn.Size = UDim2.new(0, 60, 0, 60) -- Square size for a logo
-    reopenBtn.Position = UDim2.new(0, 20, 0, 20) -- Default position top-left with padding
-    reopenBtn.AnchorPoint = Vector2.new(0, 0) -- Anchor to top-left
+    reopenBtn.Size = UDim2.new(0, 60, 0, 60)
+    reopenBtn.Position = UDim2.new(0, 20, 0, 20)
+    reopenBtn.AnchorPoint = Vector2.new(0, 0)
     reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
     reopenBtn.BackgroundTransparency = 1
     reopenBtn.Visible = false
@@ -189,7 +184,7 @@ function App:_createReopenButton()
     return reopenBtn
 end
 
-function App:_createMenuBase(title, reopenButton)
+function App:_createMenuBase(title)
     local menuFrame = Instance.new("Frame"); menuFrame.Name = title:gsub("%s", "") .. "Frame"; menuFrame.AnchorPoint = Vector2.new(0.5, 0.5); menuFrame.Size = UDim2.new(0, 600, 0, 500); menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0); menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); menuFrame.Draggable = true; menuFrame.Active = true; menuFrame.Parent = self.screenGui; createCorner(menuFrame, 8)
     local titleBar = Instance.new("Frame"); titleBar.Name = "TitleBar"; titleBar.Size = UDim2.new(1, 0, 0, 30); titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51); titleBar.Parent = menuFrame; createCorner(titleBar, 8)
     local titleLabel = Instance.new("TextLabel"); titleLabel.Name = "TitleLabel"; titleLabel.Size = UDim2.new(1, -60, 1, 0); titleLabel.Position = UDim2.new(0, 10, 0, 0); titleLabel.Text = title; titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.SourceSansBold; titleLabel.TextSize = 18; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.Parent = titleBar
@@ -198,7 +193,7 @@ function App:_createMenuBase(title, reopenButton)
 
     minimize.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
-        if reopenButton then reopenButton.Visible = true end
+        if self.reopenButton then self.reopenButton.Visible = true end
     end)
     close.MouseButton1Click:Connect(function()
         self.screenGui:Destroy()
