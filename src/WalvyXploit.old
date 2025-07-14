@@ -1,10 +1,8 @@
 --[[
-    Script: WalvyXploit GUI
-    Version: 4.1 (Executor-Safe Reopen Button)
+    Script: WalvyXploit GUI for Grow a Garden
+    Version: 4.2 (Game-Specific Feature: Peek Eggs)
     Author: Walvy
-    Description: This version uses a more robust method for the reopen button by
-                 destroying and recreating it on each minimize action to ensure
-                 it appears correctly in various executors like Delta.
+    Description: Adds a feature to the free menu to peek inside eggs in "Grow a Garden".
 ]]
 
 --================================================================--
@@ -13,6 +11,8 @@
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 --================================================================--
 -- Configuration
@@ -22,26 +22,18 @@ local CONFIG = {
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
     GUI_NAME = "WalvyXploitGui",
     REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672",
-    NOTIFICATION_DURATION = 3
+    NOTIFICATION_DURATION = 3,
+    -- Game-specific assumptions
+    EGG_FOLDER_NAME = "Eggs", -- Assuming eggs are in Workspace.Eggs
+    EGG_DATA_PATH = "GameData.Eggs" -- Assuming data is in ReplicatedStorage.GameData.Eggs
 }
 
 --================================================================--
 -- Helper Functions
 --================================================================--
 
-local function safeSetClipboard(text)
-    if typeof(setclipboard) == "function" then
-        pcall(setclipboard, text)
-    else
-        warn("WalvyXploit: 'setclipboard' is not available in this environment.")
-    end
-end
-
-local function createCorner(parent, radius)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
-    corner.Parent = parent
-end
+local function safeSetClipboard(text) if typeof(setclipboard) == "function" then pcall(setclipboard, text) else warn("WalvyXploit: 'setclipboard' is not available.") end end
+local function createCorner(parent, radius) local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, radius); corner.Parent = parent; end
 
 --================================================================--
 -- Main Application Module
@@ -53,19 +45,12 @@ App.__index = App
 function App.new()
     local self = setmetatable({}, App)
     self.lastActiveMenu = nil
-    self.reopenButton = nil -- Will be managed dynamically
+    self.reopenButton = nil
     self.localPlayer = Players.LocalPlayer
 
-    if not self.localPlayer then
-        warn("WalvyXploit: Could not find LocalPlayer. Aborting script.")
-        return nil
-    end
-
+    if not self.localPlayer then warn("WalvyXploit: Could not find LocalPlayer.") return nil end
     local playerGui = self.localPlayer:WaitForChild("PlayerGui")
-    if not playerGui then
-        warn("WalvyXploit: Could not find PlayerGui. Aborting script.")
-        return nil
-    end
+    if not playerGui then warn("WalvyXploit: Could not find PlayerGui.") return nil end
 
     self.screenGui = Instance.new("ScreenGui")
     self.screenGui.Name = CONFIG.GUI_NAME
@@ -75,7 +60,7 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v4.1).")
+    print("WalvyXploit GUI Loaded (v4.2).")
     return self
 end
 
@@ -86,7 +71,6 @@ function App:_setupUI()
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
 
-    -- Connect Events
     menuSelection.freeButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
@@ -108,35 +92,80 @@ function App:_setupUI()
 end
 
 --================================================================--
--- GUI Component Creation Methods
+-- Game-Specific Logic
 --================================================================--
 
---- Dynamically creates and shows the reopen button.
-function App:_showReopenButton()
-    -- Destroy the old button if it exists, to ensure a fresh render state
-    if self.reopenButton and self.reopenButton.Parent then
-        self.reopenButton:Destroy()
+--- Peeks into eggs and displays their contents.
+function App:_peekEggsFeature(parentMenu)
+    -- Find all egg models in the workspace
+    local eggFolder = Workspace:FindFirstChild(CONFIG.EGG_FOLDER_NAME)
+    if not eggFolder then
+        self:_showNotification("Error: Egg folder not found in Workspace.")
+        return
     end
 
-    local reopenBtn = Instance.new("ImageButton")
-    reopenBtn.Name = "ReopenButton"
-    reopenBtn.Size = UDim2.new(0, 100, 0, 40)
-    reopenBtn.AnchorPoint = Vector2.new(0.5, 0)
-    reopenBtn.Position = UDim2.new(0.5, 0, 0, 20)
-    reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
-    reopenBtn.BackgroundTransparency = 1
-    reopenBtn.ZIndex = 200 -- High ZIndex to be on top
-    reopenBtn.Parent = self.screenGui
+    local eggs = eggFolder:GetChildren()
+    if #eggs == 0 then
+        self:_showNotification("No eggs found in the garden.")
+        return
+    end
 
-    self.reopenButton = reopenBtn
+    -- Create a display frame for the results
+    local resultFrame = Instance.new("ScrollingFrame")
+    resultFrame.Name = "EggPeekResults"
+    resultFrame.Size = UDim2.new(1, -40, 1, -80)
+    resultFrame.Position = UDim2.new(0.5, 0, 0, 50)
+    resultFrame.AnchorPoint = Vector2.new(0.5, 0)
+    resultFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    resultFrame.BorderSizePixel = 0
+    resultFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Will be updated by UIListLayout
+    resultFrame.Parent = parentMenu
+    createCorner(resultFrame, 6)
 
-    reopenBtn.MouseButton1Click:Connect(function()
-        if self.lastActiveMenu and self.lastActiveMenu.Parent then
-            self.lastActiveMenu.Visible = true
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 5)
+    layout.Parent = resultFrame
+
+    for _, eggModel in ipairs(eggs) do
+        if eggModel:IsA("Model") then
+            -- This is a big assumption. We assume there's a unique ID or attribute
+            -- that links the workspace model to its data in ReplicatedStorage.
+            -- Let's assume the model's name is the key.
+            local eggName = eggModel.Name
+
+            -- Try to find the corresponding data
+            local eggData = ReplicatedStorage:FindFirstChildByPath(CONFIG.EGG_DATA_PATH .. "." .. eggName)
+            local contains = "Unknown"
+
+            if eggData then
+                -- Another assumption: the data is a StringValue named 'Contains'
+                local containsValue = eggData:FindFirstChild("Contains")
+                if containsValue and containsValue:IsA("StringValue") then
+                    contains = containsValue.Value
+                end
+            end
+
+            -- Create a label for this egg's info
+            local infoLabel = Instance.new("TextLabel")
+            infoLabel.Name = eggName .. "Info"
+            infoLabel.Text = string.format("Egg '%s' contains: %s", eggName, contains)
+            infoLabel.Font = Enum.Font.SourceSans
+            infoLabel.TextSize = 18
+            infoLabel.TextColor3 = Color3.fromRGB(225, 225, 225)
+            infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+            infoLabel.Size = UDim2.new(1, 0, 0, 30)
+            infoLabel.BackgroundTransparency = 1
+            infoLabel.Parent = resultFrame
         end
-        reopenBtn.Visible = false -- Hide it after click
-    end)
+    end
+
+    self:_showNotification(string.format("Found %d eggs.", #eggs))
 end
+
+
+--================================================================--
+-- GUI Component Creation Methods
+--================================================================--
 
 function App:_showNotification(text)
     -- ... (Unchanged)
@@ -153,6 +182,11 @@ function App:_createDiscordBanner()
     local discordFrame = Instance.new("Frame"); discordFrame.Name = "DiscordNotification"; discordFrame.AnchorPoint = Vector2.new(0.5, 0); discordFrame.Size = UDim2.new(0, 300, 0, 60); discordFrame.Position = UDim2.new(0.5, 0, 0, 10); discordFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); discordFrame.Visible = false; discordFrame.Parent = self.screenGui; createCorner(discordFrame, 8); local title = Instance.new("TextLabel"); title.Size = UDim2.new(1, 0, 0.5, 0); title.Text = "Join our Discord!"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = discordFrame; local link = Instance.new("TextButton"); link.Size = UDim2.new(0, 200, 0, 30); link.Position = UDim2.new(0.5, -100, 0.5, 0); link.Text = "Click to copy link"; link.Font = Enum.Font.SourceSans; link.TextSize = 16; link.BackgroundColor3 = Color3.fromRGB(88, 101, 242); link.TextColor3 = Color3.fromRGB(255, 255, 255); link.Parent = discordFrame; createCorner(link, 8); return {frame = discordFrame, link = link}
 end
 
+function App:_createReopenButton()
+    -- ... (Unchanged)
+    local reopenBtn = Instance.new("ImageButton"); reopenBtn.Name = "ReopenButton"; reopenBtn.Size = UDim2.new(0, 100, 0, 40); reopenBtn.AnchorPoint = Vector2.new(0.5, 0); reopenBtn.Position = UDim2.new(0.5, 0, 0, 20); reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE; reopenBtn.BackgroundTransparency = 1; reopenBtn.Visible = false; reopenBtn.ZIndex = 100; reopenBtn.Parent = self.screenGui; return reopenBtn
+end
+
 function App:_createMenuBase(title)
     local menuFrame = Instance.new("Frame"); menuFrame.Name = title:gsub("%s", "") .. "Frame"; menuFrame.AnchorPoint = Vector2.new(0.5, 0.5); menuFrame.Size = UDim2.new(0, 600, 0, 500); menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0); menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); menuFrame.Draggable = true; menuFrame.Active = true; menuFrame.Parent = self.screenGui; createCorner(menuFrame, 8)
     local titleBar = Instance.new("Frame"); titleBar.Name = "TitleBar"; titleBar.Size = UDim2.new(1, 0, 0, 30); titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51); titleBar.Parent = menuFrame; createCorner(titleBar, 8)
@@ -161,8 +195,26 @@ function App:_createMenuBase(title)
 
     minimizeButton.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
-        self:_showReopenButton() -- Call the dynamic creation function
+        if self.reopenButton then self.reopenButton.Visible = true end
     end)
+
+    -- Add game-specific features if it's the free menu
+    if title == "Free Menu" then
+        local peekButton = Instance.new("TextButton")
+        peekButton.Name = "PeekEggsButton"
+        peekButton.Text = "Peek Eggs"
+        peekButton.Size = UDim2.new(0, 120, 0, 40)
+        peekButton.Position = UDim2.new(0, 20, 0, 50)
+        peekButton.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+        peekButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        peekButton.Font = Enum.Font.SourceSansBold
+        peekButton.Parent = menuFrame
+        createCorner(peekButton, 6)
+
+        peekButton.MouseButton1Click:Connect(function()
+            self:_peekEggsFeature(menuFrame)
+        end)
+    end
 
     return menuFrame
 end
