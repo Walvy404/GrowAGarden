@@ -1,16 +1,15 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 2.2 (Refactored for Readability)
+    Version: 3.0 (No Key System)
     Author: Walvy
-    Description: A modular GUI script with a key system verified via an external web server
-                 and logging capabilities through Discord webhooks.
+    Description: A modular GUI script that loads directly into the menu selection screen
+                 without requiring a key.
 ]]
 
 --================================================================--
 -- Service and Module Imports
 --================================================================--
 
-local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 
@@ -19,15 +18,8 @@ local CoreGui = game:GetService("CoreGui")
 --================================================================--
 
 local CONFIG = {
-    -- The endpoint of your web server for key verification.
-    VERIFICATION_ENDPOINT = "https://6af326c8-e255-40fb-a584-9c57993e4e7e-00-2228rk1ako92d.picard.replit.dev/verify",
-
     -- A Discord invitation link displayed in the GUI.
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
-
-    -- [WARNING] This webhook URL is visible on the client.
-    -- For better security, logging should be handled by your web server.
-    DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1367725357461147738/cJvQBSyBLV2Ti72fj3lcSQKgZGHb9h4lTu2Tiy-qY-tif7_nF_pLvW6vVX1Wt1fAH5QW",
 
     -- The name of the GUI object created in the player's interface.
     GUI_NAME = "WalvyXploitGui"
@@ -68,7 +60,6 @@ function App.new()
     local self = setmetatable({}, App)
 
     self.lastActiveMenu = nil
-    self.isVerifying = false
     self.localPlayer = Players.LocalPlayer
 
     if not self.localPlayer then
@@ -89,32 +80,22 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v2.2).")
+    print("WalvyXploit GUI Loaded (v3.0).")
     return self
 end
 
 --- Creates and connects all UI elements.
 function App:_setupUI()
-    local keySystem = self:_createKeySystem()
+    -- No key system, so we create the main menu components directly.
     local menuSelection = self:_createMenuSelection()
     local discordBanner = self:_createDiscordBanner()
     local reopenButton = self:_createReopenButton()
 
-    local function showMainMenu()
-        keySystem.frame:Destroy()
-        menuSelection.frame.Visible = true
-        discordBanner.frame.Visible = true
-    end
+    -- Show the main menu immediately.
+    menuSelection.frame.Visible = true
+    discordBanner.frame.Visible = true
 
     -- Connect Events
-    keySystem.submit.MouseButton1Click:Connect(function()
-        if self.isVerifying then return end
-        self.isVerifying = true
-        self:_onKeySubmit(keySystem.input.Text, keySystem.status, showMainMenu)
-        task.wait(1) -- Debounce to prevent spam
-        self.isVerifying = false
-    end)
-
     menuSelection.freeButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
@@ -140,95 +121,9 @@ function App:_setupUI()
     end)
 end
 
---- Handles the key submission and verification process.
--- @param key string | The key entered by the user.
--- @param statusLabel TextLabel | The label used to display status messages.
--- @param successCallback function | The function to call upon successful verification.
-function App:_onKeySubmit(key, statusLabel, successCallback)
-    if not key or key:gsub("%s", "") == "" then
-        statusLabel.Text = "Please enter a key."
-        return
-    end
-
-    statusLabel.Text = "Verifying key..."
-
-    local requestUrl = string.format("%s?key=%s&userId=%s", CONFIG.VERIFICATION_ENDPOINT, key, tostring(self.localPlayer.UserId))
-
-    local success, responseBody = pcall(function()
-        return HttpService:GetAsync(requestUrl)
-    end)
-
-    if not success then
-        statusLabel.Text = "Error: Server unreachable."
-        warn("WalvyXploit: HTTP request failed. Error: ", tostring(responseBody))
-        return
-    end
-
-    local responseData
-    local decodeSuccess, decodedJson = pcall(function()
-        responseData = HttpService:JSONDecode(responseBody)
-    end)
-
-    if not decodeSuccess then
-        statusLabel.Text = "Error: Invalid server response."
-        warn("WalvyXploit: Failed to decode JSON response. Body: ", responseBody)
-        return
-    end
-
-    if responseData and responseData.status == "success" then
-        statusLabel.Text = "Key accepted! Opening menu..."
-        self:_sendSuccessWebhook(key)
-        task.wait(1)
-        successCallback()
-    else
-        statusLabel.Text = responseData.message or "Invalid key."
-    end
-end
-
---- Sends a log message to the configured Discord webhook.
--- @param keyUsed string | The key that was successfully used.
-function App:_sendSuccessWebhook(keyUsed)
-    if not CONFIG.DISCORD_WEBHOOK_URL or CONFIG.DISCORD_WEBHOOK_URL == "" then
-        return
-    end
-
-    local payload = {
-        username = "WalvyXploit Logger",
-        avatar_url = "https://i.imgur.com/glaA21A.png",
-        embeds = {{
-            title = "Key Activation Successful",
-            color = 65280, -- Green
-            fields = {
-                {name = "Player", value = string.format("`%s`", self.localPlayer.Name), inline = true},
-                {name = "UserID", value = tostring(self.localPlayer.UserId), inline = true},
-                {name = "Key Used", value = string.format("||`%s`||", keyUsed)} -- Spoiler tag for key
-            },
-            footer = {text = "WalvyXploit | " .. os.date("!*t")}
-        }}
-    }
-
-    local success, err = pcall(function()
-        HttpService:PostAsync(CONFIG.DISCORD_WEBHOOK_URL, HttpService:JSONEncode(payload))
-    end)
-
-    if not success then
-        warn("WalvyXploit: Failed to send Discord webhook. Error: ", tostring(err))
-    end
-end
-
 --================================================================--
 -- GUI Component Creation Methods
 --================================================================--
-
---- Creates the key submission window.
-function App:_createKeySystem()
-    local keyFrame = Instance.new("Frame"); keyFrame.Name = "KeyFrame"; keyFrame.AnchorPoint = Vector2.new(0.5, 0.5); keyFrame.Size = UDim2.new(0, 300, 0, 180); keyFrame.Position = UDim2.new(0.5, 0, 0.5, 0); keyFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); keyFrame.Parent = self.screenGui; createCorner(keyFrame, 8)
-    local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Enter Key"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = keyFrame
-    local input = Instance.new("TextBox"); input.Name = "Input"; input.Size = UDim2.new(0, 260, 0, 40); input.Position = UDim2.new(0.5, -130, 0, 40); input.PlaceholderText = "Your Key"; input.Font = Enum.Font.SourceSans; input.TextSize = 16; input.Parent = keyFrame
-    local status = Instance.new("TextLabel"); status.Name = "Status"; status.Size = UDim2.new(1, -40, 0, 20); status.Position = UDim2.new(0.5, 0, 0, 85); status.AnchorPoint = Vector2.new(0.5, 0); status.Text = ""; status.Font = Enum.Font.SourceSans; status.TextSize = 14; status.TextColor3 = Color3.fromRGB(255, 80, 80); status.BackgroundTransparency = 1; status.Parent = keyFrame
-    local submit = Instance.new("TextButton"); submit.Name = "Submit"; submit.Size = UDim2.new(0, 100, 0, 40); submit.Position = UDim2.new(0.5, -50, 0, 115); submit.Text = "Submit"; submit.Font = Enum.Font.SourceSansBold; submit.TextSize = 18; submit.BackgroundColor3 = Color3.fromRGB(50, 58, 82); submit.TextColor3 = Color3.fromRGB(255, 255, 255); submit.Parent = keyFrame; createCorner(submit, 8)
-    return {frame = keyFrame, input = input, submit = submit, status = status}
-end
 
 --- Creates the menu selection window.
 function App:_createMenuSelection()
