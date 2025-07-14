@@ -1,8 +1,8 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.5 (Simple Center Reopen Button)
+    Version: 3.6 (Simplified Menu Controls)
     Author: Walvy
-    Description: A modular GUI script with a simple, centered image button to reopen the menu.
+    Description: A modular GUI script where the menu only has a minimize ('_') button.
 ]]
 
 --================================================================--
@@ -71,7 +71,7 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.5).")
+    print("WalvyXploit GUI Loaded (v3.6).")
     return self
 end
 
@@ -128,38 +128,69 @@ function App:_createDiscordBanner()
     return {frame = discordFrame, link = link}
 end
 
---- Creates a simple, centered button to reopen a minimized menu.
 function App:_createReopenButton()
     local reopenBtn = Instance.new("ImageButton")
     reopenBtn.Name = "ReopenButton"
-    reopenBtn.Size = UDim2.new(0, 80, 0, 80) -- A larger, more clickable size
-    reopenBtn.AnchorPoint = Vector2.new(0.5, 0.5) -- Anchor to the center
-    reopenBtn.Position = UDim2.new(0.5, 0, 0.5, 0) -- Position in the center
+    reopenBtn.Size = UDim2.new(0, 80, 0, 80)
+    reopenBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+    reopenBtn.Position = UDim2.new(0.5, 0, 0.5, 0)
     reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
     reopenBtn.BackgroundTransparency = 1
     reopenBtn.Visible = false
     reopenBtn.Parent = self.screenGui
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12) -- Slightly rounded corners
+    corner.CornerRadius = UDim.new(0, 12)
     corner.Parent = reopenBtn
 
     return reopenBtn
 end
 
 function App:_createMenuBase(title)
-    local menuFrame = Instance.new("Frame"); menuFrame.Name = title:gsub("%s", "") .. "Frame"; menuFrame.AnchorPoint = Vector2.new(0.5, 0.5); menuFrame.Size = UDim2.new(0, 600, 0, 500); menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0); menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); menuFrame.Draggable = true; menuFrame.Active = true; menuFrame.Parent = self.screenGui; createCorner(menuFrame, 8)
-    local titleBar = Instance.new("Frame"); titleBar.Name = "TitleBar"; titleBar.Size = UDim2.new(1, 0, 0, 30); titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51); titleBar.Parent = menuFrame; createCorner(titleBar, 8)
-    local titleLabel = Instance.new("TextLabel"); titleLabel.Name = "TitleLabel"; titleLabel.Size = UDim2.new(1, -60, 1, 0); titleLabel.Position = UDim2.new(0, 10, 0, 0); titleLabel.Text = title; titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.SourceSansBold; titleLabel.TextSize = 18; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.Parent = titleBar
-    local minimize = Instance.new("TextButton"); minimize.Name = "MinimizeButton"; minimize.Size = UDim2.new(0, 30, 1, 0); minimize.Position = UDim2.new(1, -60, 0, 0); minimize.Text = "—"; minimize.TextColor3 = Color3.fromRGB(255, 255, 255); minimize.BackgroundColor3 = titleBar.BackgroundColor3; minimize.Font = Enum.Font.SourceSansBold; minimize.TextSize = 24; minimize.Parent = titleBar; createCorner(minimize, 8)
-    local close = Instance.new("TextButton"); close.Name = "CloseButton"; close.Size = UDim2.new(0, 30, 1, 0); close.Position = UDim2.new(1, -30, 0, 0); close.Text = "✕"; close.TextColor3 = Color3.fromRGB(255, 255, 255); close.BackgroundColor3 = Color3.fromRGB(180, 0, 0); close.Font = Enum.Font.SourceSansBold; close.TextSize = 20; close.Parent = titleBar; createCorner(close, 8)
+    local menuFrame = Instance.new("Frame")
+    menuFrame.Name = title:gsub("%s", "") .. "Frame"
+    menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    menuFrame.Size = UDim2.new(0, 600, 0, 500)
+    menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
+    menuFrame.Draggable = true
+    menuFrame.Active = true
+    menuFrame.Parent = self.screenGui
+    createCorner(menuFrame, 8)
 
-    minimize.MouseButton1Click:Connect(function()
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
+    titleBar.Parent = menuFrame
+    createCorner(titleBar, 8)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
+    titleLabel.Size = UDim2.new(1, -30, 1, 0) -- Adjusted size
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 18
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = titleBar
+
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
+    minimizeButton.Position = UDim2.new(1, -30, 0, 0) -- Positioned at the far right
+    minimizeButton.Text = "_" -- Changed text
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.BackgroundColor3 = titleBar.BackgroundColor3
+    minimizeButton.Font = Enum.Font.SourceSansBold
+    minimizeButton.TextSize = 24
+    minimizeButton.Parent = titleBar
+    createCorner(minimizeButton, 8)
+
+    minimizeButton.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
         if self.reopenButton then self.reopenButton.Visible = true end
-    end)
-    close.MouseButton1Click:Connect(function()
-        self.screenGui:Destroy()
     end)
 
     return menuFrame
