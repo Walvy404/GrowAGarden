@@ -1,9 +1,10 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 4.0 (ZIndex Fix)
+    Version: 4.1 (Executor-Safe Reopen Button)
     Author: Walvy
-    Description: A modular GUI script. This version applies a ZIndex fix to ensure the
-                 reopen button is always visible on top of other UI elements.
+    Description: This version uses a more robust method for the reopen button by
+                 destroying and recreating it on each minimize action to ensure
+                 it appears correctly in various executors like Delta.
 ]]
 
 --================================================================--
@@ -52,7 +53,7 @@ App.__index = App
 function App.new()
     local self = setmetatable({}, App)
     self.lastActiveMenu = nil
-    self.reopenButton = nil
+    self.reopenButton = nil -- Will be managed dynamically
     self.localPlayer = Players.LocalPlayer
 
     if not self.localPlayer then
@@ -69,20 +70,18 @@ function App.new()
     self.screenGui = Instance.new("ScreenGui")
     self.screenGui.Name = CONFIG.GUI_NAME
     self.screenGui.ResetOnSpawn = false
-    -- Ensure the GUI itself has a high display order to avoid being overlapped by game UI
     self.screenGui.DisplayOrder = 999
     self.screenGui.Parent = playerGui
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v4.0).")
+    print("WalvyXploit GUI Loaded (v4.1).")
     return self
 end
 
 function App:_setupUI()
     local menuSelection = self:_createMenuSelection()
     local discordBanner = self:_createDiscordBanner()
-    self.reopenButton = self:_createReopenButton()
 
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
@@ -106,65 +105,19 @@ function App:_setupUI()
         safeSetClipboard(CONFIG.DISCORD_INVITE_LINK)
         discordBanner.frame:Destroy()
     end)
-
-    self.reopenButton.MouseButton1Click:Connect(function()
-        if self.lastActiveMenu and self.lastActiveMenu.Parent then
-            self.lastActiveMenu.Visible = true
-        end
-        self.reopenButton.Visible = false
-    end)
 end
 
 --================================================================--
 -- GUI Component Creation Methods
 --================================================================--
 
-function App:_showNotification(text)
-    local notificationFrame = Instance.new("Frame")
-    notificationFrame.Name = "Notification"
-    notificationFrame.AnchorPoint = Vector2.new(1, 1)
-    notificationFrame.Position = UDim2.new(1, 20, 1, -20)
-    notificationFrame.Size = UDim2.new(0, 250, 0, 60)
-    notificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    notificationFrame.BackgroundTransparency = 0.2
-    notificationFrame.ZIndex = 200 -- High ZIndex for notifications
-    notificationFrame.Parent = self.screenGui
-    createCorner(notificationFrame, 8)
+--- Dynamically creates and shows the reopen button.
+function App:_showReopenButton()
+    -- Destroy the old button if it exists, to ensure a fresh render state
+    if self.reopenButton and self.reopenButton.Parent then
+        self.reopenButton:Destroy()
+    end
 
-    local label = Instance.new("TextLabel")
-    label.Name = "NotificationLabel"; label.Size = UDim2.new(1, -20, 1, -10); label.Position = UDim2.new(0.5, 0, 0.5, 0); label.AnchorPoint = Vector2.new(0.5, 0.5); label.Text = text; label.Font = Enum.Font.SourceSans; label.TextSize = 16; label.TextColor3 = Color3.fromRGB(255, 255, 255); label.BackgroundTransparency = 1; label.Parent = notificationFrame
-
-    local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    local tweenIn = TweenService:Create(notificationFrame, tweenInfoIn, {Position = UDim2.new(1, -20, 1, -20)})
-
-    local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-    local tweenOut = TweenService:Create(notificationFrame, tweenInfoOut, {Position = UDim2.new(1, notificationFrame.AbsoluteSize.X + 20, 1, -20)})
-
-    tweenIn:Play()
-    task.wait(CONFIG.NOTIFICATION_DURATION)
-    tweenOut:Play()
-
-    tweenOut.Completed:Connect(function()
-        notificationFrame:Destroy()
-    end)
-end
-
-function App:_createMenuSelection()
-    local selectionFrame = Instance.new("Frame"); selectionFrame.Name = "SelectionFrame"; selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5); selectionFrame.Size = UDim2.new(0, 300, 0, 150); selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0); selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); selectionFrame.Visible = false; selectionFrame.Parent = self.screenGui; createCorner(selectionFrame, 8)
-    local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Select Menu"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = selectionFrame
-    local freeButton = Instance.new("TextButton"); freeButton.Name = "FreeButton"; freeButton.Size = UDim2.new(0, 120, 0, 50); freeButton.Position = UDim2.new(0.5, -130, 0.5, -25); freeButton.Text = "Free Menu"; freeButton.Font = Enum.Font.SourceSansBold; freeButton.TextSize = 18; freeButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82); freeButton.TextColor3 = Color3.fromRGB(255, 255, 255); freeButton.Parent = selectionFrame; createCorner(freeButton, 8)
-    local premiumButton = Instance.new("TextButton"); premiumButton.Name = "PremiumButton"; premiumButton.Size = UDim2.new(0, 120, 0, 50); premiumButton.Position = UDim2.new(0.5, 10, 0.5, -25); premiumButton.Text = "Premium Menu"; premiumButton.Font = Enum.Font.SourceSansBold; premiumButton.TextSize = 18; premiumButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0); premiumButton.TextColor3 = Color3.fromRGB(0, 0, 0); premiumButton.Parent = selectionFrame; createCorner(premiumButton, 8)
-    return {frame = selectionFrame, freeButton = freeButton, premiumButton = premiumButton}
-end
-
-function App:_createDiscordBanner()
-    local discordFrame = Instance.new("Frame"); discordFrame.Name = "DiscordNotification"; discordFrame.AnchorPoint = Vector2.new(0.5, 0); discordFrame.Size = UDim2.new(0, 300, 0, 60); discordFrame.Position = UDim2.new(0.5, 0, 0, 10); discordFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); discordFrame.Visible = false; discordFrame.Parent = self.screenGui; createCorner(discordFrame, 8)
-    local title = Instance.new("TextLabel"); title.Size = UDim2.new(1, 0, 0.5, 0); title.Text = "Join our Discord!"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = discordFrame
-    local link = Instance.new("TextButton"); link.Size = UDim2.new(0, 200, 0, 30); link.Position = UDim2.new(0.5, -100, 0.5, 0); link.Text = "Click to copy link"; link.Font = Enum.Font.SourceSans; link.TextSize = 16; link.BackgroundColor3 = Color3.fromRGB(88, 101, 242); link.TextColor3 = Color3.fromRGB(255, 255, 255); link.Parent = discordFrame; createCorner(link, 8)
-    return {frame = discordFrame, link = link}
-end
-
-function App:_createReopenButton()
     local reopenBtn = Instance.new("ImageButton")
     reopenBtn.Name = "ReopenButton"
     reopenBtn.Size = UDim2.new(0, 100, 0, 40)
@@ -172,11 +125,32 @@ function App:_createReopenButton()
     reopenBtn.Position = UDim2.new(0.5, 0, 0, 20)
     reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
     reopenBtn.BackgroundTransparency = 1
-    reopenBtn.Visible = false
-    reopenBtn.ZIndex = 100 -- Set a high ZIndex to ensure it's on top
+    reopenBtn.ZIndex = 200 -- High ZIndex to be on top
     reopenBtn.Parent = self.screenGui
 
-    return reopenBtn
+    self.reopenButton = reopenBtn
+
+    reopenBtn.MouseButton1Click:Connect(function()
+        if self.lastActiveMenu and self.lastActiveMenu.Parent then
+            self.lastActiveMenu.Visible = true
+        end
+        reopenBtn.Visible = false -- Hide it after click
+    end)
+end
+
+function App:_showNotification(text)
+    -- ... (Unchanged)
+    local notificationFrame = Instance.new("Frame"); notificationFrame.Name = "Notification"; notificationFrame.AnchorPoint = Vector2.new(1, 1); notificationFrame.Position = UDim2.new(1, 20, 1, -20); notificationFrame.Size = UDim2.new(0, 250, 0, 60); notificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30); notificationFrame.BackgroundTransparency = 0.2; notificationFrame.ZIndex = 200; notificationFrame.Parent = self.screenGui; createCorner(notificationFrame, 8); local label = Instance.new("TextLabel"); label.Name = "NotificationLabel"; label.Size = UDim2.new(1, -20, 1, -10); label.Position = UDim2.new(0.5, 0, 0.5, 0); label.AnchorPoint = Vector2.new(0.5, 0.5); label.Text = text; label.Font = Enum.Font.SourceSans; label.TextSize = 16; label.TextColor3 = Color3.fromRGB(255, 255, 255); label.BackgroundTransparency = 1; label.Parent = notificationFrame; local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out); local tweenIn = TweenService:Create(notificationFrame, tweenInfoIn, {Position = UDim2.new(1, -20, 1, -20)}); local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In); local tweenOut = TweenService:Create(notificationFrame, tweenInfoOut, {Position = UDim2.new(1, notificationFrame.AbsoluteSize.X + 20, 1, -20)}); tweenIn:Play(); task.wait(CONFIG.NOTIFICATION_DURATION); tweenOut:Play(); tweenOut.Completed:Connect(function() notificationFrame:Destroy() end)
+end
+
+function App:_createMenuSelection()
+    -- ... (Unchanged)
+    local selectionFrame = Instance.new("Frame"); selectionFrame.Name = "SelectionFrame"; selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5); selectionFrame.Size = UDim2.new(0, 300, 0, 150); selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0); selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); selectionFrame.Visible = false; selectionFrame.Parent = self.screenGui; createCorner(selectionFrame, 8); local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Select Menu"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = selectionFrame; local freeButton = Instance.new("TextButton"); freeButton.Name = "FreeButton"; freeButton.Size = UDim2.new(0, 120, 0, 50); freeButton.Position = UDim2.new(0.5, -130, 0.5, -25); freeButton.Text = "Free Menu"; freeButton.Font = Enum.Font.SourceSansBold; freeButton.TextSize = 18; freeButton.BackgroundColor3 = Color3.fromRGB(50, 58, 82); freeButton.TextColor3 = Color3.fromRGB(255, 255, 255); freeButton.Parent = selectionFrame; createCorner(freeButton, 8); local premiumButton = Instance.new("TextButton"); premiumButton.Name = "PremiumButton"; premiumButton.Size = UDim2.new(0, 120, 0, 50); premiumButton.Position = UDim2.new(0.5, 10, 0.5, -25); premiumButton.Text = "Premium Menu"; premiumButton.Font = Enum.Font.SourceSansBold; premiumButton.TextSize = 18; premiumButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0); premiumButton.TextColor3 = Color3.fromRGB(0, 0, 0); premiumButton.Parent = selectionFrame; createCorner(premiumButton, 8); return {frame = selectionFrame, freeButton = freeButton, premiumButton = premiumButton}
+end
+
+function App:_createDiscordBanner()
+    -- ... (Unchanged)
+    local discordFrame = Instance.new("Frame"); discordFrame.Name = "DiscordNotification"; discordFrame.AnchorPoint = Vector2.new(0.5, 0); discordFrame.Size = UDim2.new(0, 300, 0, 60); discordFrame.Position = UDim2.new(0.5, 0, 0, 10); discordFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); discordFrame.Visible = false; discordFrame.Parent = self.screenGui; createCorner(discordFrame, 8); local title = Instance.new("TextLabel"); title.Size = UDim2.new(1, 0, 0.5, 0); title.Text = "Join our Discord!"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = discordFrame; local link = Instance.new("TextButton"); link.Size = UDim2.new(0, 200, 0, 30); link.Position = UDim2.new(0.5, -100, 0.5, 0); link.Text = "Click to copy link"; link.Font = Enum.Font.SourceSans; link.TextSize = 16; link.BackgroundColor3 = Color3.fromRGB(88, 101, 242); link.TextColor3 = Color3.fromRGB(255, 255, 255); link.Parent = discordFrame; createCorner(link, 8); return {frame = discordFrame, link = link}
 end
 
 function App:_createMenuBase(title)
@@ -187,7 +161,7 @@ function App:_createMenuBase(title)
 
     minimizeButton.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
-        if self.reopenButton then self.reopenButton.Visible = true end
+        self:_showReopenButton() -- Call the dynamic creation function
     end)
 
     return menuFrame
