@@ -1,316 +1,122 @@
---[[
-    Script: WalvyXploit GUI - Grow a Garden Edition
-    Version: 5.0 (Multi-Tab Hub)
-    Author: Walvy
-    Description: A feature-rich GUI for "Grow a Garden" with a tabbed interface
-                 inspired by modern hub designs.
-]]
-
---================================================================--
--- Service and Module Imports
---================================================================--
-
+-- Inisialisasi layanan Roblox
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local Player = Players.LocalPlayer
 
---================================================================--
--- Configuration
---================================================================--
+-- Membuat GUI di ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+ScreenGui.Name = "WalvyHub"
 
-local CONFIG = {
-    GUI_NAME = "WalvyXploitGui",
-    PRIMARY_COLOR = Color3.fromRGB(80, 80, 120),
-    SECONDARY_COLOR = Color3.fromRGB(40, 40, 60),
-    FONT = Enum.Font.SourceSans,
-    -- Game-specific assumptions
-    EGG_FOLDER_NAME = "Eggs",
-    PLANT_FOLDER_NAME = "Plants"
-}
+-- Frame utama GUI
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 5
+MainFrame.Parent = ScreenGui
 
---================================================================--
--- Helper Functions
---================================================================--
+-- Judul GUI
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Text = "Walvy Hub"
+TitleLabel.Size = UDim2.new(1, 0, 0, 50)
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 24
+TitleLabel.TextAlign = Enum.TextXAlignment.Center
+TitleLabel.Parent = MainFrame
 
-local function createCorner(parent, radius)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
-    corner.Parent = parent
+-- Tombol AutoFarm
+local AutoFarmButton = Instance.new("TextButton")
+AutoFarmButton.Size = UDim2.new(0, 180, 0, 50)
+AutoFarmButton.Position = UDim2.new(0.5, -90, 0, 70)
+AutoFarmButton.Text = "Aktifkan AutoFarm"
+AutoFarmButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+AutoFarmButton.Font = Enum.Font.Gotham
+AutoFarmButton.TextSize = 20
+AutoFarmButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoFarmButton.Parent = MainFrame
+
+-- Tombol Teleport
+local TeleportButton = Instance.new("TextButton")
+TeleportButton.Size = UDim2.new(0, 180, 0, 50)
+TeleportButton.Position = UDim2.new(0.5, -90, 0, 130)
+TeleportButton.Text = "Aktifkan Teleport"
+TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+TeleportButton.Font = Enum.Font.Gotham
+TeleportButton.TextSize = 20
+TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportButton.Parent = MainFrame
+
+-- Tombol ESP
+local ESPButton = Instance.new("TextButton")
+ESPButton.Size = UDim2.new(0, 180, 0, 50)
+ESPButton.Position = UDim2.new(0.5, -90, 0, 190)
+ESPButton.Text = "Aktifkan ESP"
+ESPButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ESPButton.Font = Enum.Font.Gotham
+ESPButton.TextSize = 20
+ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPButton.Parent = MainFrame
+
+-- Tombol WalkSpeed
+local WalkSpeedButton = Instance.new("TextButton")
+WalkSpeedButton.Size = UDim2.new(0, 180, 0, 50)
+WalkSpeedButton.Position = UDim2.new(0.5, -90, 0, 250)
+WalkSpeedButton.Text = "Ubah WalkSpeed"
+WalkSpeedButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+WalkSpeedButton.Font = Enum.Font.Gotham
+WalkSpeedButton.TextSize = 20
+WalkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+WalkSpeedButton.Parent = MainFrame
+
+-- Tombol JumpPower
+local JumpPowerButton = Instance.new("TextButton")
+JumpPowerButton.Size = UDim2.new(0, 180, 0, 50)
+JumpPowerButton.Position = UDim2.new(0.5, -90, 0, 310)
+JumpPowerButton.Text = "Ubah JumpPower"
+JumpPowerButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+JumpPowerButton.Font = Enum.Font.Gotham
+JumpPowerButton.TextSize = 20
+JumpPowerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+JumpPowerButton.Parent = MainFrame
+
+-- Fungsi untuk mengaktifkan AutoFarm
+local function activateAutoFarm()
+    print("AutoFarm diaktifkan!")
+    -- [Implementasi AutoFarm] – Gantikan dengan logika AutoFarm yang sesuai
 end
 
---================================================================--
--- Main Application Module
---================================================================--
-
-local App = {}
-App.__index = App
-
-function App.new()
-    local self = setmetatable({}, App)
-    self.localPlayer = Players.LocalPlayer
-
-    if not self.localPlayer then warn("WalvyXploit: Could not find LocalPlayer.") return nil end
-    local playerGui = self.localPlayer:WaitForChild("PlayerGui")
-    if not playerGui then warn("WalvyXploit: Could not find PlayerGui.") return nil end
-
-    self.screenGui = Instance.new("ScreenGui")
-    self.screenGui.Name = CONFIG.GUI_NAME
-    self.screenGui.ResetOnSpawn = false
-    self.screenGui.DisplayOrder = 999
-    self.screenGui.Parent = playerGui
-
-    self:_buildHub()
-
-    print("WalvyXploit Hub Loaded (v5.0).")
-    return self
+-- Fungsi untuk mengaktifkan Teleport
+local function activateTeleport()
+    print("Teleportasi ke lokasi farm...")
+    local targetPosition = Vector3.new(100, 10, 200) 
+    Player.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition))
 end
 
---- Builds the main hub UI and connects its events.
-function App:_buildHub()
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 550, 0, 400)
-    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Draggable = true
-    mainFrame.Active = true
-    mainFrame.Parent = self.screenGui
-    createCorner(mainFrame, 8)
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, 0, 0, 30)
-    titleLabel.Text = "Walvy's Garden Hub"
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.TextSize = 18
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.BackgroundColor3 = CONFIG.PRIMARY_COLOR
-    titleLabel.Parent = mainFrame
-    createCorner(titleLabel, 8)
-
-    local tabContainer = Instance.new("Frame")
-    tabContainer.Name = "TabContainer"
-    tabContainer.Size = UDim2.new(0, 100, 1, -30)
-    tabContainer.Position = UDim2.new(0, 0, 0, 30)
-    tabContainer.BackgroundColor3 = CONFIG.SECONDARY_COLOR
-    tabContainer.BorderSizePixel = 0
-    tabContainer.Parent = mainFrame
-
-    local contentContainer = Instance.new("Frame")
-    contentContainer.Name = "ContentContainer"
-    contentContainer.Size = UDim2.new(1, -100, 1, -30)
-    contentContainer.Position = UDim2.new(0, 100, 0, 30)
-    contentContainer.BackgroundTransparency = 1
-    contentContainer.Parent = mainFrame
-
-    local tabLayout = Instance.new("UIListLayout")
-    tabLayout.Padding = UDim.new(0, 5)
-    tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    tabLayout.Parent = tabContainer
-
-    -- Create tabs and content pages
-    local tabs = {"Main", "Farming", "Player", "Misc"}
-    local contentPages = {}
-
-    for _, tabName in ipairs(tabs) do
-        local contentPage = Instance.new("Frame")
-        contentPage.Name = tabName .. "Page"
-        contentPage.Size = UDim2.new(1, 0, 1, 0)
-        contentPage.BackgroundTransparency = 1
-        contentPage.Visible = (tabName == "Main") -- Show first tab by default
-        contentPage.Parent = contentContainer
-        table.insert(contentPages, contentPage)
-
-        local tabButton = Instance.new("TextButton")
-        tabButton.Name = tabName .. "Tab"
-        tabButton.Text = tabName
-        tabButton.Size = UDim2.new(1, -10, 0, 30)
-        tabButton.BackgroundColor3 = CONFIG.PRIMARY_COLOR
-        tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        tabButton.Font = CONFIG.FONT
-        tabButton.TextSize = 16
-        tabButton.Parent = tabContainer
-        createCorner(tabButton, 6)
-
-        tabButton.MouseButton1Click:Connect(function()
-            for _, page in ipairs(contentPages) do
-                page.Visible = (page.Name == tabName .. "Page")
-            end
-        end)
-    end
-
-    -- Populate the content pages
-    self:_populateMainTab(contentPages[1])
-    self:_populateFarmingTab(contentPages[2])
-    self:_populatePlayerTab(contentPages[3])
-    self:_populateMiscTab(contentPages[4], mainFrame)
+-- Fungsi untuk mengaktifkan ESP
+local function activateESP()
+    print("ESP diaktifkan...")
+    -- [Implementasi ESP] – Gantikan dengan logika ESP yang sesuai
 end
 
---- Populates the Main tab with features.
-function App:_populateMainTab(parent)
-    local peekButton = Instance.new("TextButton")
-    peekButton.Name = "PeekEggsButton"
-    peekButton.Text = "Peek All Eggs"
-    peekButton.Size = UDim2.new(0, 150, 0, 35)
-    peekButton.Position = UDim2.new(0, 20, 0, 20)
-    peekButton.BackgroundColor3 = CONFIG.PRIMARY_COLOR
-    peekButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    peekButton.Parent = parent
-    createCorner(peekButton, 6)
-
-    peekButton.MouseButton1Click:Connect(function()
-        self:_peekEggsFeature(parent)
-    end)
+-- Fungsi untuk mengubah WalkSpeed
+local function changeWalkSpeed()
+    print("WalkSpeed diubah!")
+    Player.Character.Humanoid.WalkSpeed = 100
 end
 
---- Populates the Farming tab with features.
-function App:_populateFarmingTab(parent)
-    local collectButton = Instance.new("TextButton")
-    collectButton.Name = "CollectRipeButton"
-    collectButton.Text = "Collect Ripe Plants"
-    collectButton.Size = UDim2.new(0, 150, 0, 35)
-    collectButton.Position = UDim2.new(0, 20, 0, 20)
-    collectButton.BackgroundColor3 = CONFIG.PRIMARY_COLOR
-    collectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    collectButton.Parent = parent
-    createCorner(collectButton, 6)
-
-    -- NOTE: This is a placeholder logic based on assumptions.
-    collectButton.MouseButton1Click:Connect(function()
-        local plantFolder = Workspace:FindFirstChild(CONFIG.PLANT_FOLDER_NAME)
-        if not plantFolder then return end
-        local count = 0
-        for _, plant in ipairs(plantFolder:GetChildren()) do
-            -- Assumption: Ripe plants have "Ripe" in their name.
-            if plant:IsA("Model") and string.find(plant.Name, "Ripe") then
-                -- Assumption: Interaction is done via a ProximityPrompt.
-                local prompt = plant:FindFirstChildWhichIsA("ProximityPrompt")
-                if prompt then
-                    prompt:InputHoldBegin()
-                    count = count + 1
-                end
-            end
-        end
-        self:_showNotification(string.format("Collected %d ripe plants.", count))
-    end)
+-- Fungsi untuk mengubah JumpPower
+local function changeJumpPower()
+    print("JumpPower diubah!")
+    Player.Character.Humanoid.JumpPower = 50
 end
 
---- Populates the Player tab with features.
-function App:_populatePlayerTab(parent)
-    local function createSlider(name, min, max, initial, position, callback)
-        local container = Instance.new("Frame")
-        container.Name = name .. "Container"
-        container.Size = UDim2.new(1, -40, 0, 50)
-        container.Position = position
-        container.BackgroundTransparency = 1
-        container.Parent = parent
-
-        local label = Instance.new("TextLabel")
-        label.Name = "Label"
-        label.Size = UDim2.new(1, 0, 0, 20)
-        label.Text = name .. ": " .. initial
-        label.Font = CONFIG.FONT
-        label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.BackgroundTransparency = 1
-        label.Parent = container
-
-        -- A simple frame-based slider
-        local sliderBase = Instance.new("Frame")
-        sliderBase.Name = "SliderBase"
-        sliderBase.Size = UDim2.new(1, 0, 0, 8)
-        sliderBase.Position = UDim2.new(0, 0, 0, 25)
-        sliderBase.BackgroundColor3 = CONFIG.SECONDARY_COLOR
-        sliderBase.Parent = container
-        createCorner(sliderBase, 4)
-
-        local sliderFill = Instance.new("Frame")
-        sliderFill.Name = "SliderFill"
-        sliderFill.Size = UDim2.new((initial - min) / (max - min), 0, 1, 0)
-        sliderFill.BackgroundColor3 = CONFIG.PRIMARY_COLOR
-        sliderFill.Parent = sliderBase
-        createCorner(sliderFill, 4)
-
-        local sliderButton = Instance.new("TextButton")
-        sliderButton.Name = "SliderButton"
-        sliderButton.Size = UDim2.new(1, 0, 1, 10)
-        sliderButton.BackgroundTransparency = 1
-        sliderButton.Text = ""
-        sliderButton.Parent = sliderBase
-
-        -- Slider logic
-        sliderButton.MouseButton1Down:Connect(function()
-            -- Placeholder for more complex slider logic
-        end)
-
-        -- For now, we just set it directly. A real slider is more complex.
-        callback(initial)
-    end
-
-    local humanoid = self.localPlayer.Character and self.localPlayer.Character:FindFirstChildWhichIsA("Humanoid")
-    if not humanoid then return end
-
-    createSlider("WalkSpeed", 16, 50, humanoid.WalkSpeed, UDim2.new(0, 20, 0, 20), function(value)
-        humanoid.WalkSpeed = value
-    end)
-    createSlider("JumpPower", 50, 150, humanoid.JumpPower, UDim2.new(0, 20, 0, 80), function(value)
-        humanoid.JumpPower = value
-    end)
-end
-
---- Populates the Misc tab with features.
-function App:_populateMiscTab(parent, mainFrame)
-    local toggleButton = Instance.new("TextButton")
-    toggleButton.Name = "ToggleButton"
-    toggleButton.Text = "Toggle GUI"
-    toggleButton.Size = UDim2.new(0, 150, 0, 35)
-    toggleButton.Position = UDim2.new(0, 20, 0, 20)
-    toggleButton.BackgroundColor3 = CONFIG.PRIMARY_COLOR
-    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.Parent = parent
-    createCorner(toggleButton, 6)
-
-    toggleButton.MouseButton1Click:Connect(function()
-        mainFrame.Visible = not mainFrame.Visible
-    end)
-end
-
---- Feature to peek inside eggs.
-function App:_peekEggsFeature(parentMenu)
-    -- ... (This function is largely the same as before, just adapted to the new UI)
-    local existingResults = parentMenu:FindFirstChild("EggPeekResults")
-    if existingResults then existingResults:Destroy() end
-
-    local eggFolder = Workspace:FindFirstChild(CONFIG.EGG_FOLDER_NAME)
-    if not eggFolder then self:_showNotification("Egg folder not found."); return end
-
-    local resultFrame = Instance.new("ScrollingFrame"); resultFrame.Name = "EggPeekResults"; resultFrame.Size = UDim2.new(1, -40, 1, -80); resultFrame.Position = UDim2.new(0.5, 0, 0, 60); resultFrame.AnchorPoint = Vector2.new(0.5, 0); resultFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40); resultFrame.BorderSizePixel = 0; resultFrame.Parent = parentMenu; createCorner(resultFrame, 6)
-    local layout = Instance.new("UIListLayout"); layout.Padding = UDim.new(0, 5); layout.Parent = resultFrame
-
-    local count = 0
-    for _, eggModel in ipairs(eggFolder:GetChildren()) do
-        if eggModel:IsA("Model") then
-            count = count + 1
-            local contains = eggModel:GetAttribute("Contains") or "Unknown" -- A more robust assumption using attributes
-            local infoLabel = Instance.new("TextLabel"); infoLabel.Name = eggModel.Name .. "Info"; infoLabel.Text = string.format("Egg '%s' -> %s", eggModel.Name, contains); infoLabel.Font = CONFIG.FONT; infoLabel.TextSize = 16; infoLabel.TextColor3 = Color3.fromRGB(225, 225, 225); infoLabel.TextXAlignment = Enum.TextXAlignment.Left; infoLabel.Size = UDim2.new(1, 0, 0, 25); infoLabel.BackgroundTransparency = 1; infoLabel.Parent = resultFrame
-        end
-    end
-    self:_showNotification(string.format("Found %d eggs.", count))
-end
-
---- Creates and shows a temporary notification.
-function App:_showNotification(text)
-    -- ... (Unchanged)
-    local notificationFrame = Instance.new("Frame"); notificationFrame.Name = "Notification"; notificationFrame.AnchorPoint = Vector2.new(1, 1); notificationFrame.Position = UDim2.new(1, 20, 1, -20); notificationFrame.Size = UDim2.new(0, 250, 0, 60); notificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30); notificationFrame.BackgroundTransparency = 0.2; notificationFrame.ZIndex = 200; notificationFrame.Parent = self.screenGui; createCorner(notificationFrame, 8); local label = Instance.new("TextLabel"); label.Name = "NotificationLabel"; label.Size = UDim2.new(1, -20, 1, -10); label.Position = UDim2.new(0.5, 0, 0.5, 0); label.AnchorPoint = Vector2.new(0.5, 0.5); label.Text = text; label.Font = CONFIG.FONT; label.TextSize = 16; label.TextColor3 = Color3.fromRGB(255, 255, 255); label.BackgroundTransparency = 1; label.Parent = notificationFrame; local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out); local tweenIn = TweenService:Create(notificationFrame, tweenInfoIn, {Position = UDim2.new(1, -20, 1, -20)}); local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In); local tweenOut = TweenService:Create(notificationFrame, tweenInfoOut, {Position = UDim2.new(1, notificationFrame.AbsoluteSize.X + 20, 1, -20)}); tweenIn:Play(); task.wait(CONFIG.NOTIFICATION_DURATION); tweenOut:Play(); tweenOut.Completed:Connect(function() notificationFrame:Destroy() end)
-end
-
---================================================================--
--- Script Entry Point
---================================================================--
-
-pcall(function()
-    App.new()
-end)
+-- Menghubungkan tombol dengan fungsi masing-masing
+AutoFarmButton.MouseButton1Click:Connect(activateAutoFarm)
+TeleportButton.MouseButton1Click:Connect(activateTeleport)
+ESPButton.MouseButton1Click:Connect(activateESP)
+WalkSpeedButton.MouseButton1Click:Connect(changeWalkSpeed)
+JumpPowerButton.MouseButton1Click:Connect(changeJumpPower)
