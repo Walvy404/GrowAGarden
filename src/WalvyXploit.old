@@ -180,7 +180,8 @@ function App:_createReopenButton()
     local reopenBtn = Instance.new("ImageButton")
     reopenBtn.Name = "ReopenButton"
     reopenBtn.Size = UDim2.new(0, 60, 0, 60) -- Square size for a logo
-    reopenBtn.Position = UDim2.new(0, 20, 0, 20) -- Default position top-left
+    reopenBtn.Position = UDim2.new(0, 20, 0, 20) -- Default position top-left with padding
+    reopenBtn.AnchorPoint = Vector2.new(0, 0) -- Anchor to top-left
     reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
     reopenBtn.BackgroundTransparency = 1
     reopenBtn.Visible = false
