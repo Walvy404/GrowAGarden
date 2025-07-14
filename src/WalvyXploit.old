@@ -1,8 +1,9 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.6 (Simplified Menu Controls)
+    Version: 3.7 (Menu Load Notifications)
     Author: Walvy
-    Description: A modular GUI script where the menu only has a minimize ('_') button.
+    Description: A modular GUI script that shows a notification in the bottom-right
+                 corner when a menu is opened.
 ]]
 
 --================================================================--
@@ -10,6 +11,7 @@
 --================================================================--
 
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 --================================================================--
 -- Configuration
@@ -18,7 +20,8 @@ local Players = game:GetService("Players")
 local CONFIG = {
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
     GUI_NAME = "WalvyXploitGui",
-    REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672"
+    REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672",
+    NOTIFICATION_DURATION = 3 -- Seconds
 }
 
 --================================================================--
@@ -48,7 +51,6 @@ App.__index = App
 
 function App.new()
     local self = setmetatable({}, App)
-
     self.lastActiveMenu = nil
     self.reopenButton = nil
     self.localPlayer = Players.LocalPlayer
@@ -71,7 +73,7 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.6).")
+    print("WalvyXploit GUI Loaded (v3.7).")
     return self
 end
 
@@ -88,12 +90,14 @@ function App:_setupUI()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
         self.lastActiveMenu = self:_createMenuBase("Free Menu")
+        self:_showNotification("Free Menu Loaded")
     end)
 
     menuSelection.premiumButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
         self.lastActiveMenu = self:_createMenuBase("Premium Menu")
+        self:_showNotification("Premium Menu Loaded")
     end)
 
     discordBanner.link.MouseButton1Click:Connect(function()
@@ -113,6 +117,46 @@ end
 -- GUI Component Creation Methods
 --================================================================--
 
+--- Creates and shows a temporary notification in the bottom-right corner.
+-- @param text string | The message to display in the notification.
+function App:_showNotification(text)
+    local notificationFrame = Instance.new("Frame")
+    notificationFrame.Name = "Notification"
+    notificationFrame.AnchorPoint = Vector2.new(1, 1)
+    notificationFrame.Position = UDim2.new(1, 20, 1, -20) -- Start off-screen
+    notificationFrame.Size = UDim2.new(0, 250, 0, 60)
+    notificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    notificationFrame.BackgroundTransparency = 0.2
+    notificationFrame.Parent = self.screenGui
+    createCorner(notificationFrame, 8)
+
+    local label = Instance.new("TextLabel")
+    label.Name = "NotificationLabel"
+    label.Size = UDim2.new(1, -20, 1, -10)
+    label.Position = UDim2.new(0.5, 0, 0.5, 0)
+    label.AnchorPoint = Vector2.new(0.5, 0.5)
+    label.Text = text
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 16
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.Parent = notificationFrame
+
+    local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    local tweenIn = TweenService:Create(notificationFrame, tweenInfoIn, {Position = UDim2.new(1, -20, 1, -20)})
+
+    local tweenInfoOut = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+    local tweenOut = TweenService:Create(notificationFrame, tweenInfoOut, {Position = UDim2.new(1, notificationFrame.AbsoluteSize.X + 20, 1, -20)})
+
+    tweenIn:Play()
+    task.wait(CONFIG.NOTIFICATION_DURATION)
+    tweenOut:Play()
+
+    tweenOut.Completed:Connect(function()
+        notificationFrame:Destroy()
+    end)
+end
+
 function App:_createMenuSelection()
     local selectionFrame = Instance.new("Frame"); selectionFrame.Name = "SelectionFrame"; selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5); selectionFrame.Size = UDim2.new(0, 300, 0, 150); selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0); selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); selectionFrame.Visible = false; selectionFrame.Parent = self.screenGui; createCorner(selectionFrame, 8)
     local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Select Menu"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = selectionFrame
@@ -129,64 +173,14 @@ function App:_createDiscordBanner()
 end
 
 function App:_createReopenButton()
-    local reopenBtn = Instance.new("ImageButton")
-    reopenBtn.Name = "ReopenButton"
-    reopenBtn.Size = UDim2.new(0, 80, 0, 80)
-    reopenBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-    reopenBtn.Position = UDim2.new(0.5, 0, 0.5, 0)
-    reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
-    reopenBtn.BackgroundTransparency = 1
-    reopenBtn.Visible = false
-    reopenBtn.Parent = self.screenGui
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
-    corner.Parent = reopenBtn
-
-    return reopenBtn
+    local reopenBtn = Instance.new("ImageButton"); reopenBtn.Name = "ReopenButton"; reopenBtn.Size = UDim2.new(0, 80, 0, 80); reopenBtn.AnchorPoint = Vector2.new(0.5, 0.5); reopenBtn.Position = UDim2.new(0.5, 0, 0.5, 0); reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE; reopenBtn.BackgroundTransparency = 1; reopenBtn.Visible = false; reopenBtn.Parent = self.screenGui; local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 12); corner.Parent = reopenBtn; return reopenBtn
 end
 
 function App:_createMenuBase(title)
-    local menuFrame = Instance.new("Frame")
-    menuFrame.Name = title:gsub("%s", "") .. "Frame"
-    menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    menuFrame.Size = UDim2.new(0, 600, 0, 500)
-    menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41)
-    menuFrame.Draggable = true
-    menuFrame.Active = true
-    menuFrame.Parent = self.screenGui
-    createCorner(menuFrame, 8)
-
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Size = UDim2.new(1, 0, 0, 30)
-    titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51)
-    titleBar.Parent = menuFrame
-    createCorner(titleBar, 8)
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "TitleLabel"
-    titleLabel.Size = UDim2.new(1, -30, 1, 0) -- Adjusted size
-    titleLabel.Position = UDim2.new(0, 10, 0, 0)
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.TextSize = 18
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = titleBar
-
-    local minimizeButton = Instance.new("TextButton")
-    minimizeButton.Name = "MinimizeButton"
-    minimizeButton.Size = UDim2.new(0, 30, 1, 0)
-    minimizeButton.Position = UDim2.new(1, -30, 0, 0) -- Positioned at the far right
-    minimizeButton.Text = "_" -- Changed text
-    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimizeButton.BackgroundColor3 = titleBar.BackgroundColor3
-    minimizeButton.Font = Enum.Font.SourceSansBold
-    minimizeButton.TextSize = 24
-    minimizeButton.Parent = titleBar
-    createCorner(minimizeButton, 8)
+    local menuFrame = Instance.new("Frame"); menuFrame.Name = title:gsub("%s", "") .. "Frame"; menuFrame.AnchorPoint = Vector2.new(0.5, 0.5); menuFrame.Size = UDim2.new(0, 600, 0, 500); menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0); menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); menuFrame.Draggable = true; menuFrame.Active = true; menuFrame.Parent = self.screenGui; createCorner(menuFrame, 8)
+    local titleBar = Instance.new("Frame"); titleBar.Name = "TitleBar"; titleBar.Size = UDim2.new(1, 0, 0, 30); titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51); titleBar.Parent = menuFrame; createCorner(titleBar, 8)
+    local titleLabel = Instance.new("TextLabel"); titleLabel.Name = "TitleLabel"; titleLabel.Size = UDim2.new(1, -30, 1, 0); titleLabel.Position = UDim2.new(0, 10, 0, 0); titleLabel.Text = title; titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.SourceSansBold; titleLabel.TextSize = 18; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.Parent = titleBar
+    local minimizeButton = Instance.new("TextButton"); minimizeButton.Name = "MinimizeButton"; minimizeButton.Size = UDim2.new(0, 30, 1, 0); minimizeButton.Position = UDim2.new(1, -30, 0, 0); minimizeButton.Text = "_"; minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255); minimizeButton.BackgroundColor3 = titleBar.BackgroundColor3; minimizeButton.Font = Enum.Font.SourceSansBold; minimizeButton.TextSize = 24; minimizeButton.Parent = titleBar; createCorner(minimizeButton, 8)
 
     minimizeButton.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
