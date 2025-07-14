@@ -1,9 +1,9 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.7 (Menu Load Notifications)
+    Version: 3.8 (Reopen Button Fix & Reposition)
     Author: Walvy
-    Description: A modular GUI script that shows a notification in the bottom-right
-                 corner when a menu is opened.
+    Description: A modular GUI script. This version fixes the reopen button logic and
+                 repositions it to the top-center of the screen.
 ]]
 
 --================================================================--
@@ -73,14 +73,14 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.7).")
+    print("WalvyXploit GUI Loaded (v3.8).")
     return self
 end
 
 function App:_setupUI()
     local menuSelection = self:_createMenuSelection()
     local discordBanner = self:_createDiscordBanner()
-    self.reopenButton = self:_createReopenButton()
+    self.reopenButton = self:_createReopenButton() -- Assign to self for consistent reference
 
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
@@ -117,13 +117,11 @@ end
 -- GUI Component Creation Methods
 --================================================================--
 
---- Creates and shows a temporary notification in the bottom-right corner.
--- @param text string | The message to display in the notification.
 function App:_showNotification(text)
     local notificationFrame = Instance.new("Frame")
     notificationFrame.Name = "Notification"
     notificationFrame.AnchorPoint = Vector2.new(1, 1)
-    notificationFrame.Position = UDim2.new(1, 20, 1, -20) -- Start off-screen
+    notificationFrame.Position = UDim2.new(1, 20, 1, -20)
     notificationFrame.Size = UDim2.new(0, 250, 0, 60)
     notificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     notificationFrame.BackgroundTransparency = 0.2
@@ -131,16 +129,7 @@ function App:_showNotification(text)
     createCorner(notificationFrame, 8)
 
     local label = Instance.new("TextLabel")
-    label.Name = "NotificationLabel"
-    label.Size = UDim2.new(1, -20, 1, -10)
-    label.Position = UDim2.new(0.5, 0, 0.5, 0)
-    label.AnchorPoint = Vector2.new(0.5, 0.5)
-    label.Text = text
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 16
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.BackgroundTransparency = 1
-    label.Parent = notificationFrame
+    label.Name = "NotificationLabel"; label.Size = UDim2.new(1, -20, 1, -10); label.Position = UDim2.new(0.5, 0, 0.5, 0); label.AnchorPoint = Vector2.new(0.5, 0.5); label.Text = text; label.Font = Enum.Font.SourceSans; label.TextSize = 16; label.TextColor3 = Color3.fromRGB(255, 255, 255); label.BackgroundTransparency = 1; label.Parent = notificationFrame
 
     local tweenInfoIn = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     local tweenIn = TweenService:Create(notificationFrame, tweenInfoIn, {Position = UDim2.new(1, -20, 1, -20)})
@@ -173,7 +162,17 @@ function App:_createDiscordBanner()
 end
 
 function App:_createReopenButton()
-    local reopenBtn = Instance.new("ImageButton"); reopenBtn.Name = "ReopenButton"; reopenBtn.Size = UDim2.new(0, 80, 0, 80); reopenBtn.AnchorPoint = Vector2.new(0.5, 0.5); reopenBtn.Position = UDim2.new(0.5, 0, 0.5, 0); reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE; reopenBtn.BackgroundTransparency = 1; reopenBtn.Visible = false; reopenBtn.Parent = self.screenGui; local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 12); corner.Parent = reopenBtn; return reopenBtn
+    local reopenBtn = Instance.new("ImageButton")
+    reopenBtn.Name = "ReopenButton"
+    reopenBtn.Size = UDim2.new(0, 100, 0, 40) -- A more rectangular shape
+    reopenBtn.AnchorPoint = Vector2.new(0.5, 0) -- Top-center anchor
+    reopenBtn.Position = UDim2.new(0.5, 0, 0, 20) -- Positioned at the top-center with padding
+    reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
+    reopenBtn.BackgroundTransparency = 1
+    reopenBtn.Visible = false
+    reopenBtn.Parent = self.screenGui
+
+    return reopenBtn
 end
 
 function App:_createMenuBase(title)
