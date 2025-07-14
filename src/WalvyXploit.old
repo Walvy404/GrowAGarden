@@ -1,9 +1,8 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.0 (No Key System)
+    Version: 3.1 (Draggable Image Button)
     Author: Walvy
-    Description: A modular GUI script that loads directly into the menu selection screen
-                 without requiring a key.
+    Description: A modular GUI script with a draggable image-based button to reopen the menu.
 ]]
 
 --================================================================--
@@ -11,26 +10,22 @@
 --================================================================--
 
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
 
 --================================================================--
 -- Configuration
 --================================================================--
 
 local CONFIG = {
-    -- A Discord invitation link displayed in the GUI.
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
-
-    -- The name of the GUI object created in the player's interface.
-    GUI_NAME = "WalvyXploitGui"
+    GUI_NAME = "WalvyXploitGui",
+    REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672" -- Your Image ID
 }
 
 --================================================================--
 -- Helper Functions
 --================================================================--
 
---- Safely attempts to copy text to the clipboard.
--- @param text string | The text to be copied.
 local function safeSetClipboard(text)
     if typeof(setclipboard) == "function" then
         pcall(setclipboard, text)
@@ -39,9 +34,6 @@ local function safeSetClipboard(text)
     end
 end
 
---- Creates and parents a UICorner element.
--- @param parent Instance | The instance to which the corner will be applied.
--- @param radius number | The radius of the corner.
 local function createCorner(parent, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
@@ -55,7 +47,6 @@ end
 local App = {}
 App.__index = App
 
---- Initializes the application, creating the GUI and setting up events.
 function App.new()
     local self = setmetatable({}, App)
 
@@ -80,20 +71,24 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.0).")
+    print("WalvyXploit GUI Loaded (v3.1).")
     return self
 end
 
---- Creates and connects all UI elements.
 function App:_setupUI()
-    -- No key system, so we create the main menu components directly.
     local menuSelection = self:_createMenuSelection()
     local discordBanner = self:_createDiscordBanner()
     local reopenButton = self:_createReopenButton()
 
-    -- Show the main menu immediately.
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
+
+    local function openMenuFromButton()
+        if self.lastActiveMenu and self.lastActiveMenu.Parent then
+            self.lastActiveMenu.Visible = true
+        end
+        reopenButton.Visible = false
+    end
 
     -- Connect Events
     menuSelection.freeButton.MouseButton1Click:Connect(function()
@@ -113,19 +108,58 @@ function App:_setupUI()
         discordBanner.frame:Destroy()
     end)
 
-    reopenButton.MouseButton1Click:Connect(function()
-        if self.lastActiveMenu and self.lastActiveMenu.Parent then
-            self.lastActiveMenu.Visible = true
+    -- Reopen button logic is now split into drag and click
+    self:_setupDraggableButton(reopenButton, openMenuFromButton)
+end
+
+--- Sets up the dragging and click logic for the reopen button.
+-- @param button ImageButton | The button to make draggable.
+-- @param onClick function | The function to call when the button is clicked (not dragged).
+function App:_setupDraggableButton(button, onClick)
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+    local dragThreshold = 5 -- Pixels the mouse must move before it's considered a drag
+
+    button.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = button.Position
+
+            -- Prevent Roblox's default UI drag behavior
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
         end
-        reopenButton.Visible = false
+    end)
+
+    button.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    button.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            local dragDistance = (input.Position - dragStart).Magnitude
+            if dragDistance < dragThreshold then
+                -- If it moved less than the threshold, it's a click
+                onClick()
+            end
+            dragging = false
+        end
     end)
 end
+
 
 --================================================================--
 -- GUI Component Creation Methods
 --================================================================--
 
---- Creates the menu selection window.
 function App:_createMenuSelection()
     local selectionFrame = Instance.new("Frame"); selectionFrame.Name = "SelectionFrame"; selectionFrame.AnchorPoint = Vector2.new(0.5, 0.5); selectionFrame.Size = UDim2.new(0, 300, 0, 150); selectionFrame.Position = UDim2.new(0.5, 0, 0.5, 0); selectionFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); selectionFrame.Visible = false; selectionFrame.Parent = self.screenGui; createCorner(selectionFrame, 8)
     local title = Instance.new("TextLabel"); title.Name = "Title"; title.Size = UDim2.new(1, 0, 0, 30); title.Text = "Select Menu"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = selectionFrame
@@ -134,7 +168,6 @@ function App:_createMenuSelection()
     return {frame = selectionFrame, freeButton = freeButton, premiumButton = premiumButton}
 end
 
---- Creates the Discord notification banner.
 function App:_createDiscordBanner()
     local discordFrame = Instance.new("Frame"); discordFrame.Name = "DiscordNotification"; discordFrame.AnchorPoint = Vector2.new(0.5, 0); discordFrame.Size = UDim2.new(0, 300, 0, 60); discordFrame.Position = UDim2.new(0.5, 0, 0, 10); discordFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); discordFrame.Visible = false; discordFrame.Parent = self.screenGui; createCorner(discordFrame, 8)
     local title = Instance.new("TextLabel"); title.Size = UDim2.new(1, 0, 0.5, 0); title.Text = "Join our Discord!"; title.TextColor3 = Color3.fromRGB(255, 255, 255); title.Font = Enum.Font.SourceSansBold; title.TextSize = 18; title.BackgroundTransparency = 1; title.Parent = discordFrame
@@ -144,11 +177,17 @@ end
 
 --- Creates the button to reopen a minimized menu.
 function App:_createReopenButton()
-    local reopenBtn = Instance.new("TextButton"); reopenBtn.Name = "ReopenButton"; reopenBtn.AnchorPoint = Vector2.new(0.5, 0); reopenBtn.Size = UDim2.new(0, 150, 0, 50); reopenBtn.Position = UDim2.new(0.5, 0, 0, 5); reopenBtn.Text = "Open Menu"; reopenBtn.Font = Enum.Font.SourceSansBold; reopenBtn.TextSize = 16; reopenBtn.BackgroundColor3 = Color3.fromRGB(50, 58, 82); reopenBtn.TextColor3 = Color3.fromRGB(255, 255, 255); reopenBtn.Visible = false; reopenBtn.Parent = self.screenGui; createCorner(reopenBtn, 8)
+    local reopenBtn = Instance.new("ImageButton")
+    reopenBtn.Name = "ReopenButton"
+    reopenBtn.Size = UDim2.new(0, 60, 0, 60) -- Square size for a logo
+    reopenBtn.Position = UDim2.new(0, 20, 0, 20) -- Default position top-left
+    reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
+    reopenBtn.BackgroundTransparency = 1
+    reopenBtn.Visible = false
+    reopenBtn.Parent = self.screenGui
     return reopenBtn
 end
 
---- Creates the base draggable menu window.
 function App:_createMenuBase(title, reopenButton)
     local menuFrame = Instance.new("Frame"); menuFrame.Name = title:gsub("%s", "") .. "Frame"; menuFrame.AnchorPoint = Vector2.new(0.5, 0.5); menuFrame.Size = UDim2.new(0, 600, 0, 500); menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0); menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); menuFrame.Draggable = true; menuFrame.Active = true; menuFrame.Parent = self.screenGui; createCorner(menuFrame, 8)
     local titleBar = Instance.new("Frame"); titleBar.Name = "TitleBar"; titleBar.Size = UDim2.new(1, 0, 0, 30); titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51); titleBar.Parent = menuFrame; createCorner(titleBar, 8)
@@ -171,7 +210,6 @@ end
 -- Script Entry Point
 --================================================================--
 
--- Run the entire script in a protected call to prevent it from breaking other scripts.
 pcall(function()
     App.new()
 end)
