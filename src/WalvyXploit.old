@@ -1,9 +1,9 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.8 (Reopen Button Fix & Reposition)
+    Version: 4.0 (ZIndex Fix)
     Author: Walvy
-    Description: A modular GUI script. This version fixes the reopen button logic and
-                 repositions it to the top-center of the screen.
+    Description: A modular GUI script. This version applies a ZIndex fix to ensure the
+                 reopen button is always visible on top of other UI elements.
 ]]
 
 --================================================================--
@@ -21,7 +21,7 @@ local CONFIG = {
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
     GUI_NAME = "WalvyXploitGui",
     REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672",
-    NOTIFICATION_DURATION = 3 -- Seconds
+    NOTIFICATION_DURATION = 3
 }
 
 --================================================================--
@@ -69,18 +69,20 @@ function App.new()
     self.screenGui = Instance.new("ScreenGui")
     self.screenGui.Name = CONFIG.GUI_NAME
     self.screenGui.ResetOnSpawn = false
+    -- Ensure the GUI itself has a high display order to avoid being overlapped by game UI
+    self.screenGui.DisplayOrder = 999
     self.screenGui.Parent = playerGui
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.8).")
+    print("WalvyXploit GUI Loaded (v4.0).")
     return self
 end
 
 function App:_setupUI()
     local menuSelection = self:_createMenuSelection()
     local discordBanner = self:_createDiscordBanner()
-    self.reopenButton = self:_createReopenButton() -- Assign to self for consistent reference
+    self.reopenButton = self:_createReopenButton()
 
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
@@ -125,6 +127,7 @@ function App:_showNotification(text)
     notificationFrame.Size = UDim2.new(0, 250, 0, 60)
     notificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     notificationFrame.BackgroundTransparency = 0.2
+    notificationFrame.ZIndex = 200 -- High ZIndex for notifications
     notificationFrame.Parent = self.screenGui
     createCorner(notificationFrame, 8)
 
@@ -164,12 +167,13 @@ end
 function App:_createReopenButton()
     local reopenBtn = Instance.new("ImageButton")
     reopenBtn.Name = "ReopenButton"
-    reopenBtn.Size = UDim2.new(0, 100, 0, 40) -- A more rectangular shape
-    reopenBtn.AnchorPoint = Vector2.new(0.5, 0) -- Top-center anchor
-    reopenBtn.Position = UDim2.new(0.5, 0, 0, 20) -- Positioned at the top-center with padding
+    reopenBtn.Size = UDim2.new(0, 100, 0, 40)
+    reopenBtn.AnchorPoint = Vector2.new(0.5, 0)
+    reopenBtn.Position = UDim2.new(0.5, 0, 0, 20)
     reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
     reopenBtn.BackgroundTransparency = 1
     reopenBtn.Visible = false
+    reopenBtn.ZIndex = 100 -- Set a high ZIndex to ensure it's on top
     reopenBtn.Parent = self.screenGui
 
     return reopenBtn
