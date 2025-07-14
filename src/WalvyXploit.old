@@ -37,7 +37,7 @@ end
 -- @param playerData table | Contains info like Player.Name, Player.UserId
 -- @param keyUsed string | The key that was successfully used.
 local function sendSuccessWebhook(playerData, keyUsed)
-    if not CONFIG.DISCORD_WEBHOOK_URL or CONFIG.DISCORD_WEBHOOK_URL == "" then
+    if not CONFIG.DISCORD_WEBHOOK_URL or CONFIG.DISCORD_WEBHOOK_URL == "https://discord.com/api/webhooks/1367725357461147738/cJvQBSyBLV2Ti72fj3lcSQKgZGHb9h4lTu2Tiy-qY-tif7_nF_pLvW6vVX1Wt1fAH5QW" then
         return -- Do nothing if webhook URL is not set
     end
 
