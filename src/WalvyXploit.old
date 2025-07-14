@@ -1,9 +1,8 @@
 --[[
     Script: WalvyXploit GUI
-    Version: 3.2 (Menu Open Fix)
+    Version: 3.3 (No Reopen Button)
     Author: Walvy
-    Description: A modular GUI script with a draggable image-based button to reopen the menu.
-                 This version fixes an issue where the reopen button would not show the menu.
+    Description: A modular GUI script. Menus cannot be reopened after being minimized.
 ]]
 
 --================================================================--
@@ -18,8 +17,7 @@ local Players = game:GetService("Players")
 
 local CONFIG = {
     DISCORD_INVITE_LINK = "https://discord.gg/your-invite-link",
-    GUI_NAME = "WalvyXploitGui",
-    REOPEN_BUTTON_IMAGE = "rbxassetid://138368756406672"
+    GUI_NAME = "WalvyXploitGui"
 }
 
 --================================================================--
@@ -50,8 +48,6 @@ App.__index = App
 function App.new()
     local self = setmetatable({}, App)
 
-    self.lastActiveMenu = nil
-    self.reopenButton = nil -- Will be initialized later
     self.localPlayer = Players.LocalPlayer
 
     if not self.localPlayer then
@@ -72,83 +68,33 @@ function App.new()
 
     self:_setupUI()
 
-    print("WalvyXploit GUI Loaded (v3.2).")
+    print("WalvyXploit GUI Loaded (v3.3).")
     return self
 end
 
 function App:_setupUI()
     local menuSelection = self:_createMenuSelection()
     local discordBanner = self:_createDiscordBanner()
-    self.reopenButton = self:_createReopenButton() -- Assign to self
 
     menuSelection.frame.Visible = true
     discordBanner.frame.Visible = true
-
-    local function openMenuFromButton()
-        if self.lastActiveMenu and self.lastActiveMenu.Parent then
-            self.lastActiveMenu.Visible = true
-        end
-        self.reopenButton.Visible = false
-    end
 
     -- Connect Events
     menuSelection.freeButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
-        self.lastActiveMenu = self:_createMenuBase("Free Menu")
+        self:_createMenuBase("Free Menu")
     end)
 
     menuSelection.premiumButton.MouseButton1Click:Connect(function()
         menuSelection.frame:Destroy()
         discordBanner.frame:Destroy()
-        self.lastActiveMenu = self:_createMenuBase("Premium Menu")
+        self:_createMenuBase("Premium Menu")
     end)
 
     discordBanner.link.MouseButton1Click:Connect(function()
         safeSetClipboard(CONFIG.DISCORD_INVITE_LINK)
         discordBanner.frame:Destroy()
-    end)
-
-    self:_setupDraggableButton(self.reopenButton, openMenuFromButton)
-end
-
-function App:_setupDraggableButton(button, onClick)
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
-    local dragThreshold = 5
-
-    button.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = button.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    button.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
-            button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    button.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if dragStart then
-                local dragDistance = (input.Position - dragStart).Magnitude
-                if dragDistance < dragThreshold then
-                    onClick()
-                end
-            end
-            dragging = false
-        end
     end)
 end
 
@@ -171,19 +117,6 @@ function App:_createDiscordBanner()
     return {frame = discordFrame, link = link}
 end
 
-function App:_createReopenButton()
-    local reopenBtn = Instance.new("ImageButton")
-    reopenBtn.Name = "ReopenButton"
-    reopenBtn.Size = UDim2.new(0, 60, 0, 60)
-    reopenBtn.Position = UDim2.new(0, 20, 0, 20)
-    reopenBtn.AnchorPoint = Vector2.new(0, 0)
-    reopenBtn.Image = CONFIG.REOPEN_BUTTON_IMAGE
-    reopenBtn.BackgroundTransparency = 1
-    reopenBtn.Visible = false
-    reopenBtn.Parent = self.screenGui
-    return reopenBtn
-end
-
 function App:_createMenuBase(title)
     local menuFrame = Instance.new("Frame"); menuFrame.Name = title:gsub("%s", "") .. "Frame"; menuFrame.AnchorPoint = Vector2.new(0.5, 0.5); menuFrame.Size = UDim2.new(0, 600, 0, 500); menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0); menuFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 41); menuFrame.Draggable = true; menuFrame.Active = true; menuFrame.Parent = self.screenGui; createCorner(menuFrame, 8)
     local titleBar = Instance.new("Frame"); titleBar.Name = "TitleBar"; titleBar.Size = UDim2.new(1, 0, 0, 30); titleBar.BackgroundColor3 = Color3.fromRGB(35, 38, 51); titleBar.Parent = menuFrame; createCorner(titleBar, 8)
@@ -193,7 +126,7 @@ function App:_createMenuBase(title)
 
     minimize.MouseButton1Click:Connect(function()
         menuFrame.Visible = false
-        if self.reopenButton then self.reopenButton.Visible = true end
+        -- No reopen button to show, the menu is now hidden permanently until script re-run.
     end)
     close.MouseButton1Click:Connect(function()
         self.screenGui:Destroy()
